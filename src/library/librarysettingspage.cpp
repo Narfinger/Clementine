@@ -40,7 +40,8 @@ const char* LibrarySettingsPage::kSettingsGroup = "LibraryConfig";
 LibrarySettingsPage::LibrarySettingsPage(SettingsDialog* dialog)
     : SettingsPage(dialog),
       ui_(new Ui_LibrarySettingsPage),
-      initialised_model_(false) {
+      initialised_model_(false),
+      database_changed_(false) {
   ui_->setupUi(this);
   ui_->list->setItemDelegate(new NativeSeparatorsDelegate(this));
 
@@ -52,6 +53,9 @@ LibrarySettingsPage::LibrarySettingsPage(SettingsDialog* dialog)
   connect(ui_->remove, SIGNAL(clicked()), SLOT(Remove()));
   connect(ui_->sync_stats_button, SIGNAL(clicked()),
           SLOT(WriteAllSongsStatisticsToFiles()));
+  connect(ui_->change_db, SIGNAL(clicked()), SLOT(ChangeLibraryPath()));
+
+  defaultdbpath_ = QDir::toNativeSeparators(Utilities::GetConfigPath(Utilities::Path_Root)) + "/clementine.db";
 }
 
 LibrarySettingsPage::~LibrarySettingsPage() { delete ui_; }
@@ -104,7 +108,15 @@ void LibrarySettingsPage::Save() {
   s.setValue("save_ratings_in_file", ui_->save_ratings_in_file->isChecked());
   s.setValue("save_statistics_in_file",
              ui_->save_statistics_in_file->isChecked());
+  if(database_changed_)
+  {
+      const QString oldfilename = s.value("db_path", defaultdbpath_).toString();
+      QFile::rename(oldfilename, ui_->db_path->text());
+  }
+  s.setValue("db_path", ui_->db_path->text());
   s.endGroup();
+
+
 }
 
 void LibrarySettingsPage::Load() {
@@ -146,6 +158,8 @@ void LibrarySettingsPage::Load() {
       s.value("save_ratings_in_file", false).toBool());
   ui_->save_statistics_in_file->setChecked(
       s.value("save_statistics_in_file", false).toBool());
+  ui_->db_path->setText(
+      s.value("db_path", defaultdbpath_).toString());
   s.endGroup();
 }
 
@@ -160,4 +174,15 @@ void LibrarySettingsPage::WriteAllSongsStatisticsToFiles() {
   }
   QtConcurrent::run(dialog()->app()->library(),
                     &Library::WriteAllSongsStatisticsToFiles);
+}
+
+
+void LibrarySettingsPage::ChangeLibraryPath()
+{
+    const QString oldfilename = ui_->db_path->text();
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save DB"), ui_->db_path->text());
+    if(oldfilename != filename)
+        database_changed_ = true;
+
+    ui_->db_path->setText(filename);
 }

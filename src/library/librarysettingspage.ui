@@ -168,6 +168,24 @@ If there are no matches then it will use the largest image in the directory.</st
        </widget>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="db_path">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="change_db">
+          <property name="text">
+           <string>Change DB Path</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QCheckBox" name="pretty_covers">
         <property name="text">
          <string>Show cover art in library</string>

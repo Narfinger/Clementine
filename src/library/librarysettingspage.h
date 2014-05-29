@@ -41,12 +41,15 @@ class LibrarySettingsPage : public SettingsPage {
   void Add();
   void Remove();
   void WriteAllSongsStatisticsToFiles();
+  void ChangeLibraryPath();
 
   void CurrentRowChanged(const QModelIndex& index);
 
  private:
   Ui_LibrarySettingsPage* ui_;
   bool initialised_model_;
+  bool database_changed_;
+  QString defaultdbpath_;
 };
 
 #endif  // LIBRARYSETTINGSPAGE_H

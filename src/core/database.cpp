@@ -246,7 +246,13 @@ QSqlDatabase Database::Connect() {
   if (!injected_database_name_.isNull())
     db.setDatabaseName(injected_database_name_);
   else
-    db.setDatabaseName(directory_ + "/" + kDatabaseFilename);
+  {
+      QSettings s;
+      s.beginGroup("LibraryBackend");
+      const QString defaultttmp(directory_ + "/clementine.db");
+      db.setDatabaseName(s.value("db_path", defaultttmp).toString());
+
+  }
 
   if (!db.open()) {
     app_->AddError("Database: " + db.lastError().text());
