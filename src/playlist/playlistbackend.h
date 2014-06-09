@@ -18,6 +18,7 @@
 #ifndef PLAYLISTBACKEND_H
 #define PLAYLISTBACKEND_H
 
+#include <list>
 #include <QFuture>
 #include <QHash>
 #include <QList>
@@ -54,6 +55,7 @@ class PlaylistBackend : public QObject {
   };
   typedef QList<Playlist> PlaylistList;
   typedef QFuture<PlaylistItemPtr> PlaylistItemFuture;
+  typedef std::list<SqlRow> SqlRowStdList;
 
   static const int kSongTableJoins;
 
@@ -87,7 +89,8 @@ class PlaylistBackend : public QObject {
     QMutex mutex_;
   };
 
-  QList<SqlRow> GetPlaylistRows(int playlist);
+  std::list<SqlRow> GetPlaylistRowsWithLimits(int playlist, int offset, int limit);
+  std::list<SqlRow> GetPlaylistRows(int playlist);
 
   Song NewSongFromQuery(const SqlRow& row,
                         std::shared_ptr<NewSongFromQueryState> state);

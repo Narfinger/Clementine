@@ -25,6 +25,7 @@
 #include <QMutexLocker>
 #include <QSqlQuery>
 #include <QtConcurrentMap>
+#include <QtConcurrentRun>
 #include <QtDebug>
 
 #include "core/application.h"
@@ -37,6 +38,9 @@
 #include "playlist/songplaylistitem.h"
 #include "playlistparsers/cueparser.h"
 #include "smartplaylists/generator.h"
+
+#include <QElapsedTimer>
+
 
 using std::placeholders::_1;
 using std::shared_ptr;
@@ -138,10 +142,10 @@ PlaylistBackend::Playlist PlaylistBackend::GetPlaylist(int id) {
   return p;
 }
 
-QList<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
-  QMutexLocker l(db_->Mutex());
+std::list<SqlRow> PlaylistBackend::GetPlaylistRowsWithLimits(int playlist, int offset, int limit)
+{
+  //QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
-
   QString query = "SELECT songs.ROWID, " + Song::JoinSpec("songs") +
                   ","
                   "       magnatune_songs.ROWID, " +
@@ -161,25 +165,82 @@ QList<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
                   "    ON p.library_id = magnatune_songs.ROWID"
                   " LEFT JOIN jamendo.songs AS jamendo_songs"
                   "    ON p.library_id = jamendo_songs.ROWID"
-                  " WHERE p.playlist = :playlist";
+                  " WHERE p.playlist = :playlist"
+                  " LIMIT :limit OFFSET :offset";
+  QSqlQuery q(query, db);
+  q.bindValue(":playlist", playlist);
+  q.bindValue(":limit", limit);
+  q.bindValue(":offset", offset);
+  q.exec();
+
+  quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
+  thread += 0;
+
+  if (db_->CheckErrors(q)) return std::list<SqlRow>();
+
+  std::list<SqlRow> rows;
+
+  while (q.next()) {
+    rows.push_back(SqlRow(q));
+  }
+  return rows;
+}
+
+std::list<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
+  const int splitsize = 1000;
+
+  //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
+
+  //QMutexLocker l(db_->Mutex());
+  QSqlDatabase db(db_->Connect());
+
+  QString query = "SELECT count(p.library_id)"
+          " FROM playlist_items AS p"
+          " WHERE p.playlist = :playlist";
+
   QSqlQuery q(query, db);
 
   q.bindValue(":playlist", playlist);
   q.exec();
-  if (db_->CheckErrors(q)) return QList<SqlRow>();
+  if (db_->CheckErrors(q)) return std::list<SqlRow>();
 
-  QList<SqlRow> rows;
+  q.first();
+  int size = q.value(0).toInt();
+  //l.unlock();
 
-  while (q.next()) {
-    rows << SqlRow(q);
+  const int number_of_splits = size / splitsize;
+  QList<QFuture<SqlRowStdList> > futureslist;
+  for(int i=0; i<number_of_splits +1; i++)  {    //don't forget the last one
+    const int offset = i*splitsize;
+    QFuture<SqlRowStdList> result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistRowsWithLimits, this,
+                                                                playlist, offset, splitsize));
+    futureslist << result;
   }
 
-  return rows;
+  //concatenate lists
+  SqlRowStdList result = futureslist.first().result();
+  futureslist.removeFirst();
+  for (QFuture<SqlRowStdList> elem: futureslist) {
+    SqlRowStdList list = elem.result();
+    result.splice(result.end(), list);
+  }
+
+  return result;
+
+//  QElapsedTimer timer;
+//  timer.start();
+//  QList<SqlRow> rows;
+
+//  while (q.next()) {
+//    rows << SqlRow(q);
+//  }
 }
 
 QFuture<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
   QMutexLocker l(db_->Mutex());
-  QList<SqlRow> rows = GetPlaylistRows(playlist);
+  std::list<SqlRow> rows = GetPlaylistRows(playlist);
+  Q_UNUSED(rows);
+
 
   // it's probable that we'll have a few songs associated with the
   // same CUE so we're caching results of parsing CUEs
@@ -191,7 +252,7 @@ QFuture<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
   QMutexLocker l(db_->Mutex());
-  QList<SqlRow> rows = GetPlaylistRows(playlist);
+  std::list<SqlRow> rows = GetPlaylistRows(playlist);
 
   // it's probable that we'll have a few songs associated with the
   // same CUE so we're caching results of parsing CUEs
