@@ -89,6 +89,7 @@ class PlaylistBackend : public QObject {
     QMutex mutex_;
   };
 
+  PlaylistItemPtr tmptest(PlaylistItemPtr s) { return s;};
   std::list<SqlRow> GetPlaylistRowsWithLimits(int playlist, int offset, int limit);
   std::list<SqlRow> GetPlaylistRows(int playlist);
 
