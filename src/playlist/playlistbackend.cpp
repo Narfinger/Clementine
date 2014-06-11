@@ -142,7 +142,9 @@ PlaylistBackend::Playlist PlaylistBackend::GetPlaylist(int id) {
   return p;
 }
 
-std::list<SqlRow> PlaylistBackend::GetPlaylistRowsWithLimits(int playlist, int offset, int limit)
+template <typename T>
+std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                    int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit)
 {
   //QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
@@ -173,22 +175,26 @@ std::list<SqlRow> PlaylistBackend::GetPlaylistRowsWithLimits(int playlist, int o
   q.bindValue(":offset", offset);
   q.exec();
 
-  quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
-  thread += 0;
+  if (db_->CheckErrors(q)) return std::list<PlaylistItemPtr>();
 
-  if (db_->CheckErrors(q)) return std::list<SqlRow>();
-
-  std::list<SqlRow> rows;
+  std::list<PlaylistItemPtr> rows;
 
   //do new playlistitem from query here
 
   while (q.next()) {
-    rows.push_back(SqlRow(q));
+    T p = this->*fn(q,state);
+    rows.push_back(p);
   }
   return rows;
 }
 
-std::list<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
+template <typename T>
+std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                    int playlist) {
+  // it's probable that we'll have a few songs associated with the
+  // same CUE so we're caching results of parsing CUEs
+  std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
+
   const int splitsize = 1000;
 
   //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
@@ -204,76 +210,37 @@ std::list<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
 
   q.bindValue(":playlist", playlist);
   q.exec();
-  if (db_->CheckErrors(q)) return std::list<SqlRow>();
+  if (db_->CheckErrors(q)) return std::list<T>();
 
   q.first();
   int size = q.value(0).toInt();
-  //l.unlock();
 
   const int number_of_splits = size / splitsize;
-  QList<QFuture<SqlRowStdList> > futureslist;
+  QList<QFuture<T> > futureslist;
   for(int i=0; i<number_of_splits +1; i++)  {    //don't forget the last one
     const int offset = i*splitsize;
-    QFuture<SqlRowStdList> result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistRowsWithLimits, this,
-                                                                playlist, offset, splitsize));
+    QFuture<T> result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistTWithLimits, this,
+                                                                fn, playlist, state_ptr, offset, splitsize));
     futureslist << result;
   }
 
   //concatenate lists
-  SqlRowStdList result = futureslist.first().result();
+  std::list<T> result = futureslist.first().result();
   futureslist.removeFirst();
-  for (QFuture<SqlRowStdList> elem: futureslist) {
-    SqlRowStdList list = elem.result();
+  for (QFuture<std::list<T> > elem: futureslist) {
+    std::list<T> list = elem.result();
     result.splice(result.end(), list);
   }
 
   return result;
-
-//  QElapsedTimer timer;
-//  timer.start();
-//  QList<SqlRow> rows;
-
-//  while (q.next()) {
-//    rows << SqlRow(q);
-//  }
 }
 
 QFuture<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
-  //QMutexLocker l(db_->Mutex());
-  std::list<SqlRow> rows = GetPlaylistRows(playlist);
-
-
-  // it's probable that we'll have a few songs associated with the
-  // same CUE so we're caching results of parsing CUEs
-  std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
-  QList<PlaylistItemPtr> list;
-
-  //first future requested does not work
-
-  for (std::list<SqlRow>::iterator it=rows.begin(); it != rows.end(); ++it)
-  {
-      SqlRow s = *it;
-      PlaylistItemPtr tmp = this->NewPlaylistItemFromQuery(s,state_ptr);
-      list.append(tmp);
-  }
-  //return QtConcurrent::mapped(
-  //    list, std::bind(&PlaylistBackend::tmptest, this, _1));
-
-  //something like a race condition is going on here
-  return QtConcurrent::mapped(
-      rows, std::bind(&PlaylistBackend::NewPlaylistItemFromQuery, this, _1,
-                      state_ptr));
+  GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
 }
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
-  QMutexLocker l(db_->Mutex());
-  std::list<SqlRow> rows = GetPlaylistRows(playlist);
-
-  // it's probable that we'll have a few songs associated with the
-  // same CUE so we're caching results of parsing CUEs
-  std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
-  return QtConcurrent::mapped(
-      rows, std::bind(&PlaylistBackend::NewSongFromQuery, this, _1, state_ptr));
+  GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
 }
 
 PlaylistItemPtr PlaylistBackend::NewPlaylistItemFromQuery(

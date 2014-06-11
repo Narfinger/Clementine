@@ -30,6 +30,7 @@
 
 class Application;
 class Database;
+class NewSongFromQueryState;
 
 class PlaylistBackend : public QObject {
   Q_OBJECT
@@ -55,7 +56,6 @@ class PlaylistBackend : public QObject {
   };
   typedef QList<Playlist> PlaylistList;
   typedef QFuture<PlaylistItemPtr> PlaylistItemFuture;
-  typedef std::list<SqlRow> SqlRowStdList;
 
   static const int kSongTableJoins;
 
@@ -63,8 +63,11 @@ class PlaylistBackend : public QObject {
   PlaylistList GetAllOpenPlaylists();
   PlaylistList GetAllFavoritePlaylists();
   PlaylistBackend::Playlist GetPlaylist(int id);
-  PlaylistItemFuture GetPlaylistItems(int playlist);
+
+
+  QFuture<PlaylistItemPtr> GetPlaylistItems(int playlist);
   QFuture<Song> GetPlaylistSongs(int playlist);
+
 
   void SetPlaylistOrder(const QList<int>& ids);
   void SetPlaylistUiPath(int id, const QString& path);
@@ -89,9 +92,12 @@ class PlaylistBackend : public QObject {
     QMutex mutex_;
   };
 
-  PlaylistItemPtr tmptest(PlaylistItemPtr s) { return s;};
-  std::list<SqlRow> GetPlaylistRowsWithLimits(int playlist, int offset, int limit);
-  std::list<SqlRow> GetPlaylistRows(int playlist);
+  template <typename T>
+  std::list<T> GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                      int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit);
+  template <typename T>
+  std::list<T> GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                              int playlist);
 
   Song NewSongFromQuery(const SqlRow& row,
                         std::shared_ptr<NewSongFromQueryState> state);
