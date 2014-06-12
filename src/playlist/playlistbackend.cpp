@@ -175,14 +175,14 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
   q.bindValue(":offset", offset);
   q.exec();
 
-  if (db_->CheckErrors(q)) return std::list<PlaylistItemPtr>();
+  if (db_->CheckErrors(q)) return std::list<T>();
 
-  std::list<PlaylistItemPtr> rows;
+  std::list<T> rows;
 
   //do new playlistitem from query here
 
   while (q.next()) {
-    T p = this->*fn(q,state);
+    T p = (this->*fn)(q,state);
     rows.push_back(p);
   }
   return rows;
@@ -216,10 +216,10 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   int size = q.value(0).toInt();
 
   const int number_of_splits = size / splitsize;
-  QList<QFuture<T> > futureslist;
+  QList<QFuture<std::list<T> > > futureslist;
   for(int i=0; i<number_of_splits +1; i++)  {    //don't forget the last one
     const int offset = i*splitsize;
-    QFuture<T> result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistTWithLimits, this,
+    QFuture<std::list<T> > result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistTWithLimits<T>, this,
                                                                 fn, playlist, state_ptr, offset, splitsize));
     futureslist << result;
   }
@@ -237,10 +237,12 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 
 QFuture<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
   GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
+  return QFuture<PlaylistItemPtr>();
 }
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
   GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
+  return QFuture<Song>();
 }
 
 PlaylistItemPtr PlaylistBackend::NewPlaylistItemFromQuery(
