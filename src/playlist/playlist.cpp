@@ -1441,7 +1441,8 @@ void Playlist::Save() const {
 }
 
 namespace {
-typedef QFutureWatcher<QList<PlaylistItemPtr> > PlaylistItemFutureWatcher;
+typedef QFutureWatcher<shared_ptr<PlaylistItem>> PlaylistItemFutureWatcher; //still needed?
+typedef QFutureWatcher<PlaylistBackend::PlaylistItemPtrList> PlaylistItemPtrListFutureWatcher;
 }
 
 void Playlist::Restore() {
@@ -1451,37 +1452,31 @@ void Playlist::Restore() {
   virtual_items_.clear();
   library_items_by_id_.clear();
 
-  QFuture<QList<PlaylistItemPtr> > future = QtConcurrent::run(backend_, &PlaylistBackend::GetPlaylistItems, id_);
-  PlaylistItemFutureWatcher* watcher = new PlaylistItemFutureWatcher(this);
+  QFuture<PlaylistBackend::PlaylistItemPtrList> future = QtConcurrent::run(backend_, &PlaylistBackend::GetPlaylistItems, id_);
+  PlaylistItemPtrListFutureWatcher* watcher = new PlaylistItemPtrListFutureWatcher(this);
   watcher->setFuture(future);
   connect(watcher, SIGNAL(finished()), SLOT(ItemsLoaded()));
 }
 
 void Playlist::ItemsLoaded() {
-<<<<<<< HEAD
   QTextStream out(stdout);
   out << "TIMER: " << timer.elapsed();
 
   PlaylistItemPtrListFutureWatcher* watcher =
       static_cast<PlaylistItemPtrListFutureWatcher*>(sender());
-=======
-  PlaylistItemFutureWatcher* watcher =
-      static_cast<PlaylistItemFutureWatcher*>(sender());
->>>>>>> added timer and converted to qplaylist
   watcher->deleteLater();
 
-  QList<PlaylistItemPtr> items = watcher->future().results()[0];
+  std::list<PlaylistItemPtr> items = watcher->future().results()[0];
 
   // backend returns empty elements for library items which it couldn't
   // match (because they got deleted); we don't need those
-  QMutableListIterator<PlaylistItemPtr> it(items);
-  while (it.hasNext()) {
-    PlaylistItemPtr item = it.next();
+  for (std::list<PlaylistItemPtr>::iterator it=items.begin(); it != items.end(); ++it)
+  {
+    PlaylistItemPtr item =  *it;
     if (item->IsLocalLibraryItem() && item->Metadata().url().isEmpty()) {
-      it.remove();
+      items.erase(it);
     }
   }
-
 
   is_loading_ = true;
   InsertItems(items, 0);

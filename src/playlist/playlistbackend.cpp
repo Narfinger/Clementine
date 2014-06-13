@@ -236,14 +236,14 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 }
 
 QList<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
-  QElapsedTimer timer;
-  timer.start();
+  QElapsedTimer t;
+  QTextStream out(stdout);
+  t.start();
   std::list<PlaylistItemPtr> list = GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
+  out << "TTT: " << t.elapsed() << "\n";
   QList<PlaylistItemPtr> qlist;
   for(PlaylistItemPtr item: list)
       qlist << item;
-  QTextStream out(stdout);
-  out << "TIMER: " << timer.elapsed();
   return qlist;
 }
 
