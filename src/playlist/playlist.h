@@ -83,10 +83,6 @@ class Playlist : public QAbstractListModel {
   ~Playlist();
 
   QElapsedTimer timer;
-<<<<<<< HEAD
-=======
-
->>>>>>> better timing
   void SkipTracks(const QModelIndexList& source_indexes);
 
   // Always add new columns to the end of this enum - the values are persisted
