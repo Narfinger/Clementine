@@ -66,7 +66,7 @@ class PlaylistBackend : public QObject {
   PlaylistBackend::Playlist GetPlaylist(int id);
 
 
-  std::list<PlaylistItemPtr> GetPlaylistItems(int playlist);
+  QList<PlaylistItemPtr> GetPlaylistItems(int playlist);
   QFuture<Song> GetPlaylistSongs(int playlist);
 
 
