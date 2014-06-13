@@ -55,7 +55,8 @@ class PlaylistBackend : public QObject {
     QString special_type;
   };
   typedef QList<Playlist> PlaylistList;
-  typedef QFuture<PlaylistItemPtr> PlaylistItemFuture;
+  typedef QFuture<PlaylistItemPtr> PlaylistItemFuture; //still needed?
+  typedef std::list<PlaylistItemPtr> PlaylistItemPtrList;
 
   static const int kSongTableJoins;
 
@@ -65,7 +66,7 @@ class PlaylistBackend : public QObject {
   PlaylistBackend::Playlist GetPlaylist(int id);
 
 
-  QFuture<PlaylistItemPtr> GetPlaylistItems(int playlist);
+  std::list<PlaylistItemPtr> GetPlaylistItems(int playlist);
   QFuture<Song> GetPlaylistSongs(int playlist);
 
 
