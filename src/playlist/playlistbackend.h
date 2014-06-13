@@ -56,7 +56,6 @@ class PlaylistBackend : public QObject {
   };
   typedef QList<Playlist> PlaylistList;
   typedef QFuture<PlaylistItemPtr> PlaylistItemFuture; //still needed?
-  typedef std::list<PlaylistItemPtr> PlaylistItemPtrList;
 
   static const int kSongTableJoins;
 
@@ -94,11 +93,8 @@ class PlaylistBackend : public QObject {
   };
 
   template <typename T>
-  std::list<T> GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
-                                      int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit);
-  template <typename T>
-  std::list<T> GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
-                                              int playlist);
+  QList<T> GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                      int playlist, std::shared_ptr<NewSongFromQueryState> state);
 
   Song NewSongFromQuery(const SqlRow& row,
                         std::shared_ptr<NewSongFromQueryState> state);

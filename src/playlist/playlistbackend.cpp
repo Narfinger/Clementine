@@ -143,8 +143,8 @@ PlaylistBackend::Playlist PlaylistBackend::GetPlaylist(int id) {
 }
 
 template <typename T>
-std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
-                                    int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit)
+QList<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
+                                    int playlist, std::shared_ptr<NewSongFromQueryState> state)
 {
   //QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
@@ -167,17 +167,15 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
                   "    ON p.library_id = magnatune_songs.ROWID"
                   " LEFT JOIN jamendo.songs AS jamendo_songs"
                   "    ON p.library_id = jamendo_songs.ROWID"
-                  " WHERE p.playlist = :playlist"
-                  " LIMIT :limit OFFSET :offset";
+                  " WHERE p.playlist = :playlist";
+
   QSqlQuery q(query, db);
   q.bindValue(":playlist", playlist);
-  q.bindValue(":limit", limit);
-  q.bindValue(":offset", offset);
   q.exec();
 
-  if (db_->CheckErrors(q)) return std::list<T>();
+  if (db_->CheckErrors(q)) return QList<T>();
 
-  std::list<T> rows;
+  QList<T> rows;
 
   //do new playlistitem from query here
 
@@ -188,67 +186,14 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
   return rows;
 }
 
-template <typename T>
-std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
-                                    int playlist) {
-  // it's probable that we'll have a few songs associated with the
-  // same CUE so we're caching results of parsing CUEs
-  std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
-
-  const int splitsize = 1000;
-
-  //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
-
-  //QMutexLocker l(db_->Mutex());
-  QSqlDatabase db(db_->Connect());
-
-  QString query = "SELECT count(p.library_id)"
-          " FROM playlist_items AS p"
-          " WHERE p.playlist = :playlist";
-
-  QSqlQuery q(query, db);
-
-  q.bindValue(":playlist", playlist);
-  q.exec();
-  if (db_->CheckErrors(q)) return std::list<T>();
-
-  q.first();
-  int size = q.value(0).toInt();
-
-  const int number_of_splits = size / splitsize;
-  QList<QFuture<std::list<T> > > futureslist;
-  for(int i=0; i<number_of_splits +1; i++)  {    //don't forget the last one
-    const int offset = i*splitsize;
-    QFuture<std::list<T> > result = QtConcurrent::run(std::bind(&PlaylistBackend::GetPlaylistTWithLimits<T>, this,
-                                                                fn, playlist, state_ptr, offset, splitsize));
-    futureslist << result;
-  }
-
-  //concatenate lists
-  std::list<T> result = futureslist.first().result();
-  futureslist.removeFirst();
-  for (QFuture<std::list<T> > elem: futureslist) {
-    std::list<T> list = elem.result();
-    result.splice(result.end(), list);
-  }
-
-  return result;
-}
-
 QList<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
-  QElapsedTimer t;
-  QTextStream out(stdout);
-  t.start();
-  std::list<PlaylistItemPtr> list = GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
-  out << "TTT: " << t.elapsed() << "\n";
-  QList<PlaylistItemPtr> qlist;
-  for(PlaylistItemPtr item: list)
-      qlist << item;
-  return qlist;
+  std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
+  QList<PlaylistItemPtr> list = GetPlaylistTs<PlaylistItemPtr>(&PlaylistBackend::NewPlaylistItemFromQuery, playlist, state_ptr);
+  return list;
 }
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
-  GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
+  //GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
   return QFuture<Song>();
 }
 
