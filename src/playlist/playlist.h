@@ -20,6 +20,7 @@
 
 #include <QAbstractItemModel>
 #include <QList>
+#include <QElapsedTimer>
 
 #include "playlistitem.h"
 #include "playlistsequence.h"
@@ -81,6 +82,7 @@ class Playlist : public QAbstractListModel {
            QObject* parent = nullptr);
   ~Playlist();
 
+  QElapsedTimer timer;
   void SkipTracks(const QModelIndexList& source_indexes);
 
   // Always add new columns to the end of this enum - the values are persisted
