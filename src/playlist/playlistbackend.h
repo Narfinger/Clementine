@@ -56,6 +56,7 @@ class PlaylistBackend : public QObject {
   };
   typedef QList<Playlist> PlaylistList;
   typedef QFuture<PlaylistItemPtr> PlaylistItemFuture; //still needed?
+  typedef QList<PlaylistItemPtr> PlaylistItemPtrList;
 
   static const int kSongTableJoins;
 

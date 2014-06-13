@@ -1466,16 +1466,14 @@ void Playlist::ItemsLoaded() {
       static_cast<PlaylistItemPtrListFutureWatcher*>(sender());
   watcher->deleteLater();
 
-  std::list<PlaylistItemPtr> items = watcher->future().results()[0];
+  QList<PlaylistItemPtr> items = watcher->future().results()[0];
 
   // backend returns empty elements for library items which it couldn't
-  // match (because they got deleted); we don't need those
-  for (std::list<PlaylistItemPtr>::iterator it=items.begin(); it != items.end(); ++it)
-  {
-    PlaylistItemPtr item =  *it;
-    if (item->IsLocalLibraryItem() && item->Metadata().url().isEmpty()) {
-      items.erase(it);
-    }
+  // mat  QMutableListIterator<PlaylistItemPtr> it(items);
+ QMutableListIterator<PlaylistItemPtr> it(items);
+  while (it.hasNext()) {
+    PlaylistItemPtr item = it.next();
+    it.remove();
   }
 
   is_loading_ = true;
