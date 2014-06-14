@@ -242,6 +242,7 @@ QSqlDatabase Database::Connect() {
   }
 
   db = QSqlDatabase::addDatabase("QSQLITE", connection_id);
+  qLog(Error) << db.isValid();
 
   if (!injected_database_name_.isNull())
     db.setDatabaseName(injected_database_name_);
@@ -269,8 +270,38 @@ QSqlDatabase Database::Connect() {
     // to release any remaining database locks!
   }
 
+
+  QString query = "SELECT count(p.library_id)"
+          " FROM playlist_items AS p";
+  QSqlQuery q(query,db);
+  q.exec();
+  qLog(Error) << q.lastError();
+  q.first();
+  int size = q.value(0).toInt();
+  qLog(Error) << size;
+
+  qLog(Error) << "dbname: " << db.databaseName() << " cname: " << db.connectionName() << "  dbtbc: " << db.tables().count();
   if (db.tables().count() == 0) {
     // Set up initial schema
+      QStringList tables = db.tables();
+      quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
+      QSqlError lerr = db.lastError();
+      QString tmp = db.databaseName();
+      QString tmp2 = db.connectionName();
+      bool openeeddd = db.isOpen();
+      QString conop = db.connectOptions();
+      bool tt = db.isValid();
+      bool gg = injected_database_name_.isNull();
+
+      Q_UNUSED(conop);
+      Q_UNUSED(tmp);
+      Q_UNUSED(tmp2);
+      Q_UNUSED(tables);
+      Q_UNUSED(thread);
+      Q_UNUSED(openeeddd);
+      Q_UNUSED(gg);
+      Q_UNUSED(tt);
+      Q_UNUSED(lerr);
     qLog(Info) << "Creating initial database schema";
     UpdateDatabaseSchema(0, db);
   }
@@ -565,6 +596,9 @@ bool Database::CheckErrors(const QSqlQuery& query) {
     qLog(Error) << "db error: " << last_error;
     qLog(Error) << "faulty query: " << query.lastQuery();
     qLog(Error) << "bound values: " << query.boundValues();
+    qLog(Error) << "dbtext: " << last_error.databaseText();
+    qLog(Error) << "drivText: " << last_error.driverText();
+    qLog(Error) << "native: " << last_error.number();
 
     return true;
   }

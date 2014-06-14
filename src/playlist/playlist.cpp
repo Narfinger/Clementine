@@ -1476,7 +1476,7 @@ void Playlist::ItemsLoaded() {
   }
 
   is_loading_ = true;
-  InsertItems(items, 0);
+  //InsertItems(items, 0);
   is_loading_ = false;
 
   PlaylistBackend::Playlist p = backend_->GetPlaylist(id_);

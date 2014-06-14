@@ -146,8 +146,9 @@ template <typename T>
 std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
                                     int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit)
 {
-  //QMutexLocker l(db_->Mutex());
+  QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
+
   QString query = "SELECT songs.ROWID, " + Song::JoinSpec("songs") +
                   ","
                   "       magnatune_songs.ROWID, " +
@@ -185,6 +186,7 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
     T p = (this->*fn)(q,state);
     rows.push_back(p);
   }
+  l.unlock();
   return rows;
 }
 
@@ -195,11 +197,11 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   // same CUE so we're caching results of parsing CUEs
   std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
 
-  const int splitsize = 1000;
+  const int splitsize = 500;
 
   //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
 
-  //QMutexLocker l(db_->Mutex());
+  QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
   QString query = "SELECT count(p.library_id)"
@@ -214,6 +216,7 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 
   q.first();
   int size = q.value(0).toInt();
+  l.unlock();
 
   const int number_of_splits = size / splitsize;
   QList<QFuture<std::list<T> > > futureslist;
@@ -236,7 +239,12 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 }
 
 std::list<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
-  return GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
+  qLog(Error) << "TT";
+  QElapsedTimer timer;
+  timer.start();
+  std::list<PlaylistItemPtr> tmp = GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
+  qLog(Error) << "TTT" << timer.elapsed();
+  return tmp;
 }
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
