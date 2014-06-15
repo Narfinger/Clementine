@@ -146,7 +146,7 @@ template <typename T>
 std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
                                     int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit)
 {
-  QMutexLocker l(db_->Mutex());
+ // QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
   QString query = "SELECT songs.ROWID, " + Song::JoinSpec("songs") +
@@ -186,7 +186,7 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
     T p = (this->*fn)(q,state);
     rows.push_back(p);
   }
-  l.unlock();
+  //l.unlock();
   return rows;
 }
 
@@ -197,7 +197,7 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   // same CUE so we're caching results of parsing CUEs
   std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
 
-  const int splitsize = 500;
+  const int splitsize = 2000;
 
   //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
 
@@ -216,7 +216,7 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 
   q.first();
   int size = q.value(0).toInt();
-  l.unlock();
+  //l.unlock();
 
   const int number_of_splits = size / splitsize;
   QList<QFuture<std::list<T> > > futureslist;
