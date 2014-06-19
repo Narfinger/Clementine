@@ -964,11 +964,13 @@ void Playlist::MoveItemsWithoutUndo(int start, const QList<int>& dest_rows) {
   Save();
 }
 
-void Playlist::InsertItems(const PlaylistItemList& itemsIn, int pos,
+//we need a tmeplate that supports std::list<PlaylistItemPtr> and QList<PlaylistItemPtr>
+template <typename ListT>
+void Playlist::InsertItems(const ListT& itemsIn, int pos,
                            bool play_now, bool enqueue) {
-  if (itemsIn.isEmpty()) return;
+  if (itemsIn.empty()) return;
 
-  PlaylistItemList items = itemsIn;
+  ListT items = itemsIn;
 
   // exercise vetoes
   SongList songs;
@@ -993,26 +995,24 @@ void Playlist::InsertItems(const PlaylistItemList& itemsIn, int pos,
   }
 
   if (!vetoed.isEmpty()) {
-    QMutableListIterator<PlaylistItemPtr> it(items);
-    while (it.hasNext()) {
-      PlaylistItemPtr item = it.next();
+    for (auto it = items.begin(); it != items.end(); ++it) {
+      PlaylistItemPtr item = *it;
       const Song& current = item->Metadata();
-
       if (vetoed.contains(current)) {
         vetoed.remove(current);
-        it.remove();
+        items.erase(it);
       }
     }
 
     // check for empty items once again after veto
-    if (items.isEmpty()) {
+    if (items.empty()) {
       return;
     }
   }
 
   const int start = pos == -1 ? items_.count() : pos;
 
-  if (items.count() > kUndoItemLimit) {
+  if (items.size() > kUndoItemLimit) {
     // Too big to keep in the undo stack. Also clear the stack because it
     // might have been invalidated.
     InsertItemsWithoutUndo(items, pos, enqueue);
@@ -1025,12 +1025,14 @@ void Playlist::InsertItems(const PlaylistItemList& itemsIn, int pos,
   if (play_now) emit PlayRequested(index(start, 0));
 }
 
-void Playlist::InsertItemsWithoutUndo(const PlaylistItemList& items, int pos,
+//we need a tmeplate that supports std::list<PlaylistItemPtr> and QList<PlaylistItemPtr>
+template <typename ListT>
+void Playlist::InsertItemsWithoutUndo(const ListT& items, int pos,
                                       bool enqueue) {
-  if (items.isEmpty()) return;
+  if (items.empty()) return;
 
   const int start = pos == -1 ? items_.count() : pos;
-  const int end = start + items.count() - 1;
+  const int end = start + items.size() - 1;
 
   beginInsertRows(QModelIndex(), start, end);
   for (int i = start; i <= end; ++i) {
@@ -1476,7 +1478,7 @@ void Playlist::ItemsLoaded() {
   }
 
   is_loading_ = true;
-  //InsertItems(items, 0);
+  InsertItems(items, 0);
   is_loading_ = false;
 
   PlaylistBackend::Playlist p = backend_->GetPlaylist(id_);

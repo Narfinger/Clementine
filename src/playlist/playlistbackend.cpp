@@ -247,9 +247,9 @@ std::list<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
   return tmp;
 }
 
-QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
-  GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
-  return QFuture<Song>();
+std::list<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
+  std::list<Song> tmp = GetPlaylistTs(&PlaylistBackend::NewSongFromQuery, playlist);
+  return tmp;
 }
 
 PlaylistItemPtr PlaylistBackend::NewPlaylistItemFromQuery(

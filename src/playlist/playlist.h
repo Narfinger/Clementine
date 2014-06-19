@@ -218,7 +218,8 @@ class Playlist : public QAbstractListModel {
   void set_have_incremented_playcount() { have_incremented_playcount_ = true; }
 
   // Changing the playlist
-  void InsertItems(const PlaylistItemList& items, int pos = -1,
+  template <typename ListT>
+  void InsertItems(const ListT& items, int pos = -1,
                    bool play_now = false, bool enqueue = false);
   void InsertLibraryItems(const SongList& items, int pos = -1,
                           bool play_now = false, bool enqueue = false);
@@ -353,7 +354,8 @@ signals:
 
   // Modify the playlist without changing the undo stack.  These are used by
   // our friends in PlaylistUndoCommands
-  void InsertItemsWithoutUndo(const PlaylistItemList& items, int pos,
+  template <typename ListT>
+  void InsertItemsWithoutUndo(const ListT& items, int pos,
                               bool enqueue = false);
   PlaylistItemList RemoveItemsWithoutUndo(int pos, int count);
   void MoveItemsWithoutUndo(const QList<int>& source_rows, int pos);
