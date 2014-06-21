@@ -1035,8 +1035,10 @@ void Playlist::InsertItemsWithoutUndo(const ListT& items, int pos,
   const int end = start + items.size() - 1;
 
   beginInsertRows(QModelIndex(), start, end);
-  for (int i = start; i <= end; ++i) {
-    PlaylistItemPtr item = items[i - start];
+  int i = start;
+  for (auto it = items.begin(); it != items.end(); ++it) {
+    i++;
+    PlaylistItemPtr item = *it;
     items_.insert(i, item);
     virtual_items_ << virtual_items_.count();
 
