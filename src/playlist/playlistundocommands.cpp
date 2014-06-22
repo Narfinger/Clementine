@@ -22,31 +22,39 @@ namespace PlaylistUndoCommands {
 
 Base::Base(Playlist* playlist) : QUndoCommand(0), playlist_(playlist) {}
 
-InsertItems::InsertItems(Playlist* playlist, const PlaylistItemList& items,
+template <typename PlaylistItemTList>
+InsertItems<PlaylistItemTList>::InsertItems(Playlist* playlist, const PlaylistItemTList& items,
                          int pos, bool enqueue)
     : Base(playlist), items_(items), pos_(pos), enqueue_(enqueue) {
-  setText(tr("add %n songs", "", items_.count()));
+  setText(tr("add %n songs", "", items_.size()));
 }
 
-void InsertItems::redo() {
+template <typename PlaylistItemTList>
+void InsertItems<PlaylistItemTList>::redo() {
   playlist_->InsertItemsWithoutUndo(items_, pos_, enqueue_);
 }
 
-void InsertItems::undo() {
-  const int start = pos_ == -1 ? playlist_->rowCount() - items_.count() : pos_;
-  playlist_->RemoveItemsWithoutUndo(start, items_.count());
+template <typename PlaylistItemTList>
+void InsertItems<PlaylistItemTList>::undo() {
+  const int start = pos_ == -1 ? playlist_->rowCount() - items_.size() : pos_;
+  playlist_->RemoveItemsWithoutUndo(start, items_.size());
 }
 
-bool InsertItems::UpdateItem(const PlaylistItemPtr& updated_item) {
-  for (int i = 0; i < items_.size(); i++) {
-    PlaylistItemPtr item = items_[i];
+template <typename PlaylistItemTList>
+bool InsertItems<PlaylistItemTList>::UpdateItem(const PlaylistItemPtr& updated_item) {
+  for(auto it = items_.begin(); it != items_.end(); ++it) {
+    PlaylistItemPtr item = *it;
     if (item->Metadata().url() == updated_item->Metadata().url()) {
-      items_[i] = updated_item;
-      return true;
+        *it = updated_item;
+        return true;
     }
   }
   return false;
 }
+
+//define this so we will generate code
+template class InsertItems<QList<PlaylistItemPtr> >;
+template class InsertItems<std::list<PlaylistItemPtr> >;
 
 RemoveItems::RemoveItems(Playlist* playlist, int pos, int count)
     : Base(playlist) {
@@ -105,5 +113,6 @@ ShuffleItems::ShuffleItems(Playlist* playlist,
     : ReOrderItems(playlist, new_items) {
   setText(tr("shuffle songs"));
 }
-
 }  // namespace
+
+

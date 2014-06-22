@@ -39,6 +39,7 @@ class QSortFilterProxyModel;
 class QUndoStack;
 
 namespace PlaylistUndoCommands {
+template <typename PlaylistItemTList>
 class InsertItems;
 class RemoveItems;
 class MoveItems;
@@ -69,6 +70,7 @@ class SongInsertVetoListener : public QObject {
 class Playlist : public QAbstractListModel {
   Q_OBJECT
 
+  template <typename PlaylistItemTList>
   friend class PlaylistUndoCommands::InsertItems;
   friend class PlaylistUndoCommands::RemoveItems;
   friend class PlaylistUndoCommands::MoveItems;

@@ -146,7 +146,8 @@ template <typename T>
 std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(const SqlRow&, std::shared_ptr<NewSongFromQueryState>),
                                     int playlist, std::shared_ptr<NewSongFromQueryState> state, int offset, int limit)
 {
- // QMutexLocker l(db_->Mutex());
+  //this does not need a lock as we only read on the database and this function should only be called from within a lock
+  //in our case this will be GetPlaylistTs which makes sure that there are no concurrent writes on the db
   QSqlDatabase db(db_->Connect());
 
   QString query = "SELECT songs.ROWID, " + Song::JoinSpec("songs") +
@@ -181,12 +182,10 @@ std::list<T> PlaylistBackend::GetPlaylistTWithLimits(T (PlaylistBackend::*fn)(co
   std::list<T> rows;
 
   //do new playlistitem from query here
-
   while (q.next()) {
     T p = (this->*fn)(q,state);
     rows.push_back(p);
   }
-  //l.unlock();
   return rows;
 }
 
@@ -198,8 +197,6 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
 
   const int splitsize = 2000;
-
-  //quint64 thread = reinterpret_cast<quint64>(QThread::currentThread());
 
   QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());

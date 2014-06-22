@@ -802,7 +802,7 @@ bool Playlist::dropMimeData(const QMimeData* data, Qt::DropAction action,
         undo_stack_->clear();
       } else {
         undo_stack_->push(
-            new PlaylistUndoCommands::InsertItems(this, items, row));
+            new PlaylistUndoCommands::InsertItems<PlaylistItemList>(this, items, row));
       }
 
       // Remove the items from the source playlist if it was a move event
@@ -1019,7 +1019,7 @@ void Playlist::InsertItems(const ListT& itemsIn, int pos,
     undo_stack_->clear();
   } else {
     undo_stack_->push(
-        new PlaylistUndoCommands::InsertItems(this, items, pos, enqueue));
+        new PlaylistUndoCommands::InsertItems<ListT>(this, items, pos, enqueue));
   }
 
   if (play_now) emit PlayRequested(index(start, 0));
@@ -1167,8 +1167,9 @@ void Playlist::UpdateItems(const SongList& songs) {
         for (int i = 0; i < undo_stack_->count(); i++) {
           QUndoCommand* undo_action =
               const_cast<QUndoCommand*>(undo_stack_->command(i));
-          PlaylistUndoCommands::InsertItems* undo_action_insert =
-              dynamic_cast<PlaylistUndoCommands::InsertItems*>(undo_action);
+          //i am not sure which type we should use here
+          PlaylistUndoCommands::InsertItems<QList<PlaylistItemPtr> >* undo_action_insert =
+              dynamic_cast<PlaylistUndoCommands::InsertItems<QList<PlaylistItemPtr> >*>(undo_action);
           if (undo_action_insert) {
             bool found_and_updated = undo_action_insert->UpdateItem(new_item);
             if (found_and_updated) break;

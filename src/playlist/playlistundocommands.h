@@ -38,9 +38,10 @@ class Base : public QUndoCommand {
   Playlist* playlist_;
 };
 
+template <typename PlaylistItemTList>
 class InsertItems : public Base {
  public:
-  InsertItems(Playlist* playlist, const PlaylistItemList& items, int pos,
+  InsertItems(Playlist* playlist, const PlaylistItemTList& items, int pos,
               bool enqueue = false);
 
   void undo();
@@ -53,7 +54,7 @@ class InsertItems : public Base {
   bool UpdateItem(const PlaylistItemPtr& updated_item);
 
  private:
-  PlaylistItemList items_;
+  PlaylistItemTList items_;
   int pos_;
   bool enqueue_;
 };
