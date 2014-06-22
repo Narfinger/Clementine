@@ -236,11 +236,11 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
 }
 
 std::list<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
-  qLog(Error) << "TT";
   QElapsedTimer timer;
   timer.start();
   std::list<PlaylistItemPtr> tmp = GetPlaylistTs(&PlaylistBackend::NewPlaylistItemFromQuery, playlist);
-  qLog(Error) << "TTT" << timer.elapsed();
+  QTextStream out(stdout);
+  out << "TTIMER: " << timer.elapsed() << "\n";
   return tmp;
 }
 

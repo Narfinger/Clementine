@@ -1014,7 +1014,10 @@ void LibraryBackend::ForceCompilation(const QString& album,
 }
 
 bool LibraryBackend::ExecQuery(LibraryQuery* q) {
-  return !db_->CheckErrors(q->Exec(db_->Connect(), songs_table_, fts_table_));
+  QMutexLocker l(db_->Mutex());
+  QSqlDatabase db(db_->Connect());
+  bool ret = !db_->CheckErrors(q->Exec(db, songs_table_, fts_table_));
+  return ret;
 }
 
 SongList LibraryBackend::FindSongs(const smart_playlists::Search& search) {
