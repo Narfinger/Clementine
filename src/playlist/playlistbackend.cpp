@@ -48,7 +48,7 @@ using std::shared_ptr;
 using smart_playlists::GeneratorPtr;
 
 const int PlaylistBackend::kSongTableJoins = 4;
-const int PlaylistBackend::splitsize = 5000;
+const int PlaylistBackend::splitsize = 3000;
 
 PlaylistBackend::PlaylistBackend(Application* app, QObject* parent)
     : QObject(parent), app_(app), db_(app_->database()) {}
