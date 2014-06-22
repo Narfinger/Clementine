@@ -48,6 +48,7 @@ using std::shared_ptr;
 using smart_playlists::GeneratorPtr;
 
 const int PlaylistBackend::kSongTableJoins = 4;
+const int PlaylistBackend::splitsize = 5000;
 
 PlaylistBackend::PlaylistBackend(Application* app, QObject* parent)
     : QObject(parent), app_(app), db_(app_->database()) {}
@@ -196,8 +197,6 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   // same CUE so we're caching results of parsing CUEs
   std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
 
-  const int splitsize = 2000;
-
   QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
@@ -212,8 +211,7 @@ std::list<T> PlaylistBackend::GetPlaylistTs(T (PlaylistBackend::*fn)(const SqlRo
   if (db_->CheckErrors(q)) return std::list<T>();
 
   q.first();
-  int size = q.value(0).toInt();
-  //l.unlock();
+  const int size = q.value(0).toInt();
 
   const int number_of_splits = size / splitsize;
   QList<QFuture<std::list<T> > > futureslist;

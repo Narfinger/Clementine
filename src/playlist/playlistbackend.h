@@ -59,6 +59,7 @@ class PlaylistBackend : public QObject {
   typedef std::list<PlaylistItemPtr> PlaylistItemPtrList;
 
   static const int kSongTableJoins;
+  static const int splitsize;
 
   PlaylistList GetAllPlaylists();
   PlaylistList GetAllOpenPlaylists();
