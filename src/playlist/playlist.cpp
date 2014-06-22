@@ -1451,7 +1451,6 @@ void Playlist::Restore() {
   virtual_items_.clear();
   library_items_by_id_.clear();
 
-  timer.start();
   PlaylistBackend::PlaylistItemFuture future = backend_->GetPlaylistItems(id_);
   PlaylistItemFutureWatcher* watcher = new PlaylistItemFutureWatcher(this);
   watcher->setFuture(future);
@@ -1459,9 +1458,6 @@ void Playlist::Restore() {
 }
 
 void Playlist::ItemsLoaded() {
-  QTextStream out(stdout);
-  out << "TIMER: " << timer.elapsed();
-
   PlaylistItemFutureWatcher* watcher =
       static_cast<PlaylistItemFutureWatcher*>(sender());
   watcher->deleteLater();

@@ -26,6 +26,7 @@
 #include <QSqlQuery>
 #include <QtConcurrentMap>
 #include <QtDebug>
+#include <QElapsedTimer>
 
 #include "core/application.h"
 #include "core/database.h"
@@ -179,15 +180,23 @@ QList<SqlRow> PlaylistBackend::GetPlaylistRows(int playlist) {
 
 QFuture<PlaylistItemPtr> PlaylistBackend::GetPlaylistItems(int playlist) {
   QMutexLocker l(db_->Mutex());
+  QElapsedTimer timer;
+  timer.start();
   QList<SqlRow> rows = GetPlaylistRows(playlist);
 
   // it's probable that we'll have a few songs associated with the
   // same CUE so we're caching results of parsing CUEs
   std::shared_ptr<NewSongFromQueryState> state_ptr(new NewSongFromQueryState());
-  return QtConcurrent::mapped(
+
+  QFuture<PlaylistItemPtr> test =  QtConcurrent::mapped(
       rows, std::bind(&PlaylistBackend::NewPlaylistItemFromQuery, this, _1,
                       state_ptr));
+  test.waitForFinished();
+  QTextStream out(stdout);
+  out << "TTIMER: " << timer.elapsed() << "\n";
+  return test;
 }
+
 
 QFuture<Song> PlaylistBackend::GetPlaylistSongs(int playlist) {
   QMutexLocker l(db_->Mutex());
