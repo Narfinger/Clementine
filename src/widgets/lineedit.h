@@ -164,6 +164,8 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
   QString textFromValue(int val) const;
 
   // ExtendedEditor
+  void set_hint(const QString& hint);
+  void clear_hint();
   bool is_empty() const { return text().isEmpty() || text() == "0"; }
   void set_focus() { QSpinBox::setFocus(); }
   QString text() const { return QSpinBox::text(); }

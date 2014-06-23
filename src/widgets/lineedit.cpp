@@ -194,6 +194,16 @@ SpinBox::SpinBox(QWidget* parent)
   connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
 }
 
+void SpinBox::set_hint(const QString& hint) {
+  //Spinboxes don't have a good hint so we need to trick
+  ExtendedEditor::set_hint("-");
+  widget_->setStyleSheet("QSpinBox { color:gray; }");
+}
+
+void SpinBox::clear_hint() {
+  widget_->setStyleSheet("");
+}
+
 void SpinBox::paintEvent(QPaintEvent* e) {
   QSpinBox::paintEvent(e);
   Paint(this);
