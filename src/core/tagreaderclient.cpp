@@ -15,11 +15,15 @@
    along with Clementine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "core/application.h"
+#include "core/closure.h"
+#include "core/database.h"
 #include "tagreaderclient.h"
 
 #include <QCoreApplication>
 #include <QFile>
 #include <QProcess>
+#include <QtConcurrentRun>
 #include <QTcpServer>
 #include <QThread>
 #include <QUrl>
@@ -27,8 +31,8 @@
 const char* TagReaderClient::kWorkerExecutableName = "clementine-tagreader";
 TagReaderClient* TagReaderClient::sInstance = nullptr;
 
-TagReaderClient::TagReaderClient(QObject* parent)
-    : QObject(parent), worker_pool_(new WorkerPool<HandlerType>(this)) {
+TagReaderClient::TagReaderClient(Application* app, QObject* parent)
+    : QObject(parent), db_(app->database()), worker_pool_(new WorkerPool<HandlerType>(this)) {
   sInstance = this;
 
   worker_pool_->SetExecutableName(kWorkerExecutableName);
@@ -56,13 +60,19 @@ TagReaderReply* TagReaderClient::ReadFile(const QString& filename) {
 
 TagReaderReply* TagReaderClient::SaveFile(const QString& filename,
                                           const Song& metadata) {
+  /* tagedit should update db*/
+  /* tagedit should touch every folder up until music collection root*/
   pb::tagreader::Message message;
   pb::tagreader::SaveFileRequest* req = message.mutable_save_file_request();
 
   req->set_filename(DataCommaSizeFromQString(filename));
   metadata.ToProtobuf(req->mutable_metadata());
 
-  return worker_pool_->SendMessageWithReply(&message);
+  TagReaderReply* reply = worker_pool_->SendMessageWithReply(&message);
+ 
+  //this is honestly only in a qtconcurrent because i could not figure out how to do this with NewClosure
+  QtConcurrent::run(this, &TagReaderClient::SongSaveComplete, reply, filename, metadata);
+  return reply;
 }
 
 TagReaderReply* TagReaderClient::UpdateSongStatistics(const Song& metadata) {
@@ -159,7 +169,6 @@ bool TagReaderClient::SaveFileBlocking(const QString& filename,
     ret = reply->message().save_file_response().success();
   }
   reply->deleteLater();
-
   return ret;
 }
 
@@ -220,3 +229,18 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
 
   return ret;
 }
+
+void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& metadata) {
+  qLog(Error) << "inside";
+  
+  
+  QString tmp = "FLKSAJFL";
+  Q_UNUSED(tmp);
+  
+  return;
+  /*
+  Song tmp = metadata;
+  QString tmp2 = metadata.album();
+  Q_UNUSED(tmp2);*/
+}
+
