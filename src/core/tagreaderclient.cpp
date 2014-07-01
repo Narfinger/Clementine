@@ -17,11 +17,12 @@
 
 #include "core/application.h"
 #include "core/closure.h"
-#include "core/database.h"
+#include "library/librarybackend.h"
 #include "tagreaderclient.h"
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QMutexLocker>
 #include <QProcess>
 #include <QtConcurrentRun>
 #include <QTcpServer>
@@ -32,7 +33,7 @@ const char* TagReaderClient::kWorkerExecutableName = "clementine-tagreader";
 TagReaderClient* TagReaderClient::sInstance = nullptr;
 
 TagReaderClient::TagReaderClient(Application* app, QObject* parent)
-    : QObject(parent), db_(app->database()), worker_pool_(new WorkerPool<HandlerType>(this)) {
+    : QObject(parent), app_(app), worker_pool_(new WorkerPool<HandlerType>(this)) {
   sInstance = this;
 
   worker_pool_->SetExecutableName(kWorkerExecutableName);
@@ -230,17 +231,12 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
   return ret;
 }
 
-void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& metadata) {
-  qLog(Error) << "inside";
-  
-  
-  QString tmp = "FLKSAJFL";
-  Q_UNUSED(tmp);
-  
-  return;
-  /*
-  Song tmp = metadata;
-  QString tmp2 = metadata.album();
-  Q_UNUSED(tmp2);*/
+void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song) {
+  LibraryBackend* be = app_->library_backend();
+  SongList list;
+  list << song;
+  be->AddOrUpdateSongs(list);
+
+  //update playlist
 }
 
