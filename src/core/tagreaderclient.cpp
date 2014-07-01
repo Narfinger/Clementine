@@ -18,6 +18,7 @@
 #include "core/application.h"
 #include "core/closure.h"
 #include "library/librarybackend.h"
+#include "playlist/playlistmanager.h"
 #include "tagreaderclient.h"
 
 #include <QCoreApplication>
@@ -232,11 +233,18 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
 }
 
 void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song) {
+  //update song
   LibraryBackend* be = app_->library_backend();
-  SongList list;
-  list << song;
-  be->AddOrUpdateSongs(list);
+  SongList slist;
+  slist << song;
+  be->AddOrUpdateSongs(slist);
 
   //update playlist
+  PlaylistManager* pm = app_->playlist_manager();
+  QList<Playlist*> pll = pm->GetAllPlaylists();
+  for(Playlist* pl: pll) {
+    pl->UpdateItems(slist);
+  }
 }
+
 
