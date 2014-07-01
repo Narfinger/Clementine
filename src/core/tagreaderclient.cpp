@@ -246,5 +246,3 @@ void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const 
     pl->UpdateItems(slist);
   }
 }
-
-
