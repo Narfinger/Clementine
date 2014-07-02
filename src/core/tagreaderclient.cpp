@@ -233,18 +233,17 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
 }
 
 void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song) {
-  //update song
-  if( song.directory_id() !=-1) { //if we are not in a collection directory
-    LibraryBackend* be = app_->library_backend();
-    SongList slist;
-    slist << song;
+  LibraryBackend* be = app_->library_backend();
+  SongList slist;
+  slist << song;
+  if (song.directory_id() !=-1) { //if we are in a collection directory
     be->AddOrUpdateSongs(slist);
   }
 
   //update playlist
   PlaylistManager* pm = app_->playlist_manager();
   QList<Playlist*> pll = pm->GetAllPlaylists();
-  for(Playlist* pl: pll) {
+  for (Playlist* pl: pll) {
     pl->UpdateItems(slist);
-  }
+  }  
 }
