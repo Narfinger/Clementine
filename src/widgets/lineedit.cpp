@@ -204,27 +204,23 @@ void SpinBox::set_hint(const QString& hint) {
     sbox->setMinimum(0);
     widget_->setStyleSheet("");
   } else {
+    draw_hint_ = true;
     sbox->setSpecialValueText("-");
     sbox->setMinimum(-1);
     sbox->setValue(-1);
-    widget_->setStyleSheet("QSpinBox { color:gray; }"); 
-    draw_hint_ = true;
+    widget_->setStyleSheet("QSpinBox { color:gray; }");   
   }
 }
 
 void SpinBox::value_changed(int value) {
   if (draw_hint_) {
-    this->blockSignals(true);
     if (value == -1) {
       set_hint("-");
     } else {
-      set_hint("");
-      draw_hint_ = true;
+      set_hint(""); //this sets the minimum to 0 making it is only possible to get to the original state with reset
     }
-    this->blockSignals(false);
   }
 }
-
 
 void SpinBox::paintEvent(QPaintEvent* e) {
   QSpinBox::paintEvent(e);
