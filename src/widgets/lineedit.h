@@ -165,7 +165,6 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
 
   // ExtendedEditor
   void set_hint(const QString& hint);
-  void clear_hint();
   bool is_empty() const { return text().isEmpty() || text() == "0"; }
   void set_focus() { QSpinBox::setFocus(); }
   QString text() const { return QSpinBox::text(); }
@@ -175,6 +174,9 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
  protected:
   void paintEvent(QPaintEvent*);
   void resizeEvent(QResizeEvent*);
+  
+ private slots:
+  void value_changed(int value);
 
 signals:
   void Reset();

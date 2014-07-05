@@ -192,17 +192,39 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
   connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
+  connect(this, SIGNAL(valueChanged(int)), this, SLOT(value_changed(int)));
 }
 
 void SpinBox::set_hint(const QString& hint) {
-  //Spinboxes don't have a good hint so we need to trick
-  ExtendedEditor::set_hint("-");
-  widget_->setStyleSheet("QSpinBox { color:gray; }");
+  //Spinboxes don't have a good hint so we need to use SpecialValueText
+  QSpinBox* sbox = static_cast<QSpinBox*>(widget_);
+  if( hint.isEmpty()) {
+    draw_hint_ = false;
+    sbox->setSpecialValueText("");
+    sbox->setMinimum(0);
+    widget_->setStyleSheet("");
+  } else {
+    sbox->setSpecialValueText("-");
+    sbox->setMinimum(-1);
+    sbox->setValue(-1);
+    widget_->setStyleSheet("QSpinBox { color:gray; }"); 
+    draw_hint_ = true;
+  }
 }
 
-void SpinBox::clear_hint() {
-  widget_->setStyleSheet("");
+void SpinBox::value_changed(int value) {
+  if (draw_hint_) {
+    this->blockSignals(true);
+    if (value == -1) {
+      set_hint("-");
+    } else {
+      set_hint("");
+      draw_hint_ = true;
+    }
+    this->blockSignals(false);
+  }
 }
+
 
 void SpinBox::paintEvent(QPaintEvent* e) {
   QSpinBox::paintEvent(e);
