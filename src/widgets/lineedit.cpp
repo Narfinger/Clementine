@@ -192,12 +192,11 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
   connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
-  connect(this, SIGNAL(valueChanged(int)), this, SLOT(value_changed(int)));
 }
 
 void SpinBox::set_hint(const QString& hint) {
   //Spinboxes don't have a good hint so we need to use SpecialValueText
-  QSpinBox* sbox = static_cast<QSpinBox*>(widget_);
+ /* QSpinBox* sbox = static_cast<QSpinBox*>(widget_);
   if( hint.isEmpty()) {
     draw_hint_ = false;
     sbox->setSpecialValueText("");
@@ -209,11 +208,11 @@ void SpinBox::set_hint(const QString& hint) {
     sbox->setValue(-1);
     widget_->setStyleSheet("QSpinBox { color:gray; }"); 
     draw_hint_ = true;
-  }
+  }*/
 }
 
 void SpinBox::value_changed(int value) {
-  if (draw_hint_) {
+  /*if (draw_hint_) {
     this->blockSignals(true);
     if (value == -1) {
       set_hint("-");
@@ -222,13 +221,34 @@ void SpinBox::value_changed(int value) {
       draw_hint_ = true;
     }
     this->blockSignals(false);
-  }
+  }*/
 }
 
 
 void SpinBox::paintEvent(QPaintEvent* e) {
-  QSpinBox::paintEvent(e);
-  Paint(this);
+ QSpinBox::paintEvent(e);
+ Paint(this);
+  
+  QPainter p(this);
+  QFont font;
+  font.setBold(true);
+  font.setPointSizeF(widget_->font().pointSizeF()+5);
+
+  QFontMetrics m(font);
+  //const int kBorder = (widget_->height());
+
+ // p.setPen(widget_->palette().color(QPalette::Disabled, QPalette::Text));
+ // p.setFont(font);
+
+  
+  //QRect r(30,30,30,30);
+  
+  QRect r(0, 0, widget_->width(), widget_->height());
+  p.fillRect(r,Qt::black);
+  p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
+             m.elidedText("TTTTTTTTTTTTTTTT", Qt::ElideRight, r.width()));
+  //QSpinBox::paintEvent(e);
+  
 }
 
 void SpinBox::resizeEvent(QResizeEvent* e) {
