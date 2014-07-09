@@ -192,71 +192,21 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
   connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
+  
+  LineEdit* le = new LineEdit(this);
+  this->setLineEdit(le);
+  //try to set something such that we don't paint all the stuff for lineedit
 }
 
 void SpinBox::set_hint(const QString& hint) {
-  //Spinboxes don't have a good hint so we need to use SpecialValueText
- /* QSpinBox* sbox = static_cast<QSpinBox*>(widget_);
-  if( hint.isEmpty()) {
-    draw_hint_ = false;
-    sbox->setSpecialValueText("");
-    sbox->setMinimum(0);
-    widget_->setStyleSheet("");
-  } else {
-    draw_hint_ = true;
-    sbox->setSpecialValueText("-");
-    sbox->setMinimum(-1);
-    sbox->setValue(-1);
-<<<<<<< HEAD
-    widget_->setStyleSheet("QSpinBox { color:gray; }");   
-  }
+  LineEdit* le = static_cast<LineEdit*>(this->lineEdit());
+  le->set_hint("..");
 }
 
-void SpinBox::value_changed(int value) {
-  if (draw_hint_) {
-=======
-    widget_->setStyleSheet("QSpinBox { color:gray; }"); 
-    draw_hint_ = true;
-  }*/
-}
-
-void SpinBox::value_changed(int value) {
-  /*if (draw_hint_) {
-    this->blockSignals(true);
-    if (value == -1) {
-      set_hint("-");
-    } else {
-      set_hint(""); //this sets the minimum to 0 making it is only possible to get to the original state with reset
-    }
-  }
-    this->blockSignals(false);
-  }*/
-}
 
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);
  Paint(this);
-  
-  QPainter p(this);
-  QFont font;
-  font.setBold(true);
-  font.setPointSizeF(widget_->font().pointSizeF()+5);
-
-  QFontMetrics m(font);
-  //const int kBorder = (widget_->height());
-
- // p.setPen(widget_->palette().color(QPalette::Disabled, QPalette::Text));
- // p.setFont(font);
-
-  
-  //QRect r(30,30,30,30);
-  
-  QRect r(0, 0, widget_->width(), widget_->height());
-  p.fillRect(r,Qt::black);
-  p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
-             m.elidedText("TTTTTTTTTTTTTTTT", Qt::ElideRight, r.width()));
-  //QSpinBox::paintEvent(e);
-  
 }
 
 void SpinBox::resizeEvent(QResizeEvent* e) {

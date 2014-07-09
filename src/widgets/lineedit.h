@@ -174,9 +174,6 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
  protected:
   void paintEvent(QPaintEvent*);
   void resizeEvent(QResizeEvent*);
-  
- private slots:
-  void value_changed(int value);
 
 signals:
   void Reset();
