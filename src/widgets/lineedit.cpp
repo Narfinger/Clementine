@@ -164,7 +164,7 @@ void LineEdit::text_changed(const QString& text) {
 
 void LineEdit::paintEvent(QPaintEvent* e) {
   QLineEdit::paintEvent(e);
-  Paint(this);
+ // Paint(this);
 }
 
 void LineEdit::resizeEvent(QResizeEvent* e) {
@@ -186,27 +186,36 @@ void TextEdit::paintEvent(QPaintEvent* e) {
 
 void TextEdit::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
-  Resize();
+  //Resize();
 }
+
+HintLineEdit::HintLineEdit(QWidget* parent)
+  : QLineEdit(parent)
+{
+  
+}
+
 
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
   connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
   
-  LineEdit* le = new LineEdit(this);
+  HintLineEdit* le = new HintLineEdit(this);
+  //LineEdit* le = new LineEdit(this);
   this->setLineEdit(le);
   //try to set something such that we don't paint all the stuff for lineedit
 }
 
 void SpinBox::set_hint(const QString& hint) {
-  LineEdit* le = static_cast<LineEdit*>(this->lineEdit());
-  le->set_hint("..");
+ // ExtendedEditor::set_hint("..");
+ // LineEdit* le = static_cast<LineEdit*>(this->lineEdit());
+ // le->set_hint("..");
 }
 
 
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);
- Paint(this);
+ //Paint(this);
 }
 
 void SpinBox::resizeEvent(QResizeEvent* e) {

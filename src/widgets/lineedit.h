@@ -149,6 +149,13 @@ signals:
   void Reset();
 };
 
+class HintLineEdit : public QLineEdit {
+  Q_OBJECT
+ public:
+    HintLineEdit(QWidget* parent = nullptr);
+};
+  
+
 class SpinBox : public QSpinBox, public ExtendedEditor {
   Q_OBJECT
   Q_PROPERTY(QString hint READ hint WRITE set_hint);
