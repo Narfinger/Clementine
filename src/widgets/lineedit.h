@@ -72,6 +72,7 @@ class ExtendedEditor : public LineEditInterface {
 
  protected:
   void Paint(QPaintDevice* device);
+  void PaintHint(QPaintDevice* device);
   void Resize();
 
  private:
@@ -149,14 +150,6 @@ signals:
   void Reset();
 };
 
-class HintLineEdit : public QLineEdit {
-  Q_OBJECT
- public:
-    HintLineEdit(QWidget* parent = nullptr);
-    void paintEvent(QPaintEvent* e);
-};
-  
-
 class SpinBox : public QSpinBox, public ExtendedEditor {
   Q_OBJECT
   Q_PROPERTY(QString hint READ hint WRITE set_hint);
@@ -185,6 +178,9 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
 
 signals:
   void Reset();
+  
+ private:
+  bool eventFilter(QObject* watched, QEvent* event);
 };
 
 #endif  // LINEEDIT_H

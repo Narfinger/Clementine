@@ -21,7 +21,6 @@
 #include <QPaintEvent>
 #include <QStyle>
 #include <QStyleOption>
-#include <QStylePainter>
 #include <QToolButton>
 #include <QtDebug>
 
@@ -106,26 +105,31 @@ void ExtendedEditor::Paint(QPaintDevice* device) {
     clear_button_->hide();
 
     if (draw_hint_) {
-      QPainter p(device);
-
-      QFont font;
-      font.setBold(false);
-      font.setPointSizeF(font_point_size_);
-
-      QFontMetrics m(font);
-      const int kBorder = (device->height() - m.height()) / 2;
-
-      p.setPen(widget_->palette().color(QPalette::Disabled, QPalette::Text));
-      p.setFont(font);
-
-      QRect r(5, kBorder, device->width() - 10, device->height() - kBorder * 2);
-      p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
-                 m.elidedText(hint_, Qt::ElideRight, r.width()));
+      PaintHint(device);
     }
   } else {
     clear_button_->setVisible(has_clear_button_);
   }
 }
+
+void ExtendedEditor::PaintHint(QPaintDevice* device) {
+  QPainter p(device);
+
+  QFont font;
+  font.setBold(false);
+  font.setPointSizeF(font_point_size_);
+
+  QFontMetrics m(font);
+  const int kBorder = (device->height() - m.height()) / 2;
+
+  p.setPen(widget_->palette().color(QPalette::Disabled, QPalette::Text));
+  p.setFont(font);
+
+  QRect r(5, kBorder, device->width() - 10, device->height() - kBorder * 2);
+  p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
+             m.elidedText(hint_, Qt::ElideRight, r.width()));
+}
+
 
 void ExtendedEditor::Resize() {
   const QSize sz = clear_button_->sizeHint();
@@ -189,35 +193,16 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
   Resize();
 }
 
-HintLineEdit::HintLineEdit(QWidget* parent)
-  : QLineEdit(parent) {
-}
-
-void HintLineEdit::paintEvent(QPaintEvent* e) {
-  QStylePainter p(this);
-  //p.fillRect(this->rect(), Qt::darkRed);
-}
-
-
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
     connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
  
-  
-  HintLineEdit* le = new HintLineEdit(this);
-  //LineEdit seems to have the wrong size by a few pixels
-  //LineEdit* le = new LineEdit(this);
-  //le->set_reset_button(false);
-  //le->set_clear_button(false);
-  this->setLineEdit(le);
-  reset_button_->raise();
-  clear_button_->raise();
+  QLineEdit* le = this->lineEdit();
+  le->installEventFilter(this);
 }
 
 void SpinBox::set_hint(const QString& hint) {
- // ExtendedEditor::set_hint("..");
- // LineEdit* le = static_cast<LineEdit*>(this->lineEdit());
- // le->set_hint("..");
+  hint_ = "..";
 }
 
 
@@ -234,5 +219,16 @@ void SpinBox::resizeEvent(QResizeEvent* e) {
 QString SpinBox::textFromValue(int val) const {
   if (val <= 0 && !hint_.isEmpty()) return "-";
   return QSpinBox::textFromValue(val);
+}
+
+bool SpinBox::eventFilter(QObject* watched, QEvent* event) {
+  if (lineEdit() == watched && event->type() == QEvent::Paint) {
+    if (!draw_hint_) return false;
+    if (hint_.isEmpty()) return false;
+    QPainter p(lineEdit());
+    PaintHint(lineEdit());
+    return true;
+  }
+  return false;
 }
 
