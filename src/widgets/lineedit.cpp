@@ -21,6 +21,7 @@
 #include <QPaintEvent>
 #include <QStyle>
 #include <QStyleOption>
+#include <QStylePainter>
 #include <QToolButton>
 #include <QtDebug>
 
@@ -55,7 +56,6 @@ ExtendedEditor::ExtendedEditor(QWidget* widget, int extra_right_padding,
 
   widget->connect(clear_button_, SIGNAL(clicked()), widget, SLOT(clear()));
   widget->connect(clear_button_, SIGNAL(clicked()), widget, SLOT(setFocus()));
-
   UpdateButtonGeometry();
 }
 
@@ -164,7 +164,7 @@ void LineEdit::text_changed(const QString& text) {
 
 void LineEdit::paintEvent(QPaintEvent* e) {
   QLineEdit::paintEvent(e);
- // Paint(this);
+  Paint(this);
 }
 
 void LineEdit::resizeEvent(QResizeEvent* e) {
@@ -186,24 +186,32 @@ void TextEdit::paintEvent(QPaintEvent* e) {
 
 void TextEdit::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
-  //Resize();
+  Resize();
 }
 
 HintLineEdit::HintLineEdit(QWidget* parent)
-  : QLineEdit(parent)
-{
-  
+  : QLineEdit(parent) {
+}
+
+void HintLineEdit::paintEvent(QPaintEvent* e) {
+  QStylePainter p(this);
+  //p.fillRect(this->rect(), Qt::darkRed);
 }
 
 
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, false) {
-  connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
+    connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
+ 
   
   HintLineEdit* le = new HintLineEdit(this);
+  //LineEdit seems to have the wrong size by a few pixels
   //LineEdit* le = new LineEdit(this);
+  //le->set_reset_button(false);
+  //le->set_clear_button(false);
   this->setLineEdit(le);
-  //try to set something such that we don't paint all the stuff for lineedit
+  reset_button_->raise();
+  clear_button_->raise();
 }
 
 void SpinBox::set_hint(const QString& hint) {
@@ -215,7 +223,7 @@ void SpinBox::set_hint(const QString& hint) {
 
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);
- //Paint(this);
+ Paint(this);
 }
 
 void SpinBox::resizeEvent(QResizeEvent* e) {
@@ -227,3 +235,4 @@ QString SpinBox::textFromValue(int val) const {
   if (val <= 0 && !hint_.isEmpty()) return "-";
   return QSpinBox::textFromValue(val);
 }
+

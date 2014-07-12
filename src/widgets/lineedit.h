@@ -153,6 +153,7 @@ class HintLineEdit : public QLineEdit {
   Q_OBJECT
  public:
     HintLineEdit(QWidget* parent = nullptr);
+    void paintEvent(QPaintEvent* e);
 };
   
 
@@ -169,7 +170,7 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
 
   // QSpinBox
   QString textFromValue(int val) const;
-
+  
   // ExtendedEditor
   void set_hint(const QString& hint);
   bool is_empty() const { return text().isEmpty() || text() == "0"; }
