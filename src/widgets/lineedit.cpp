@@ -55,6 +55,7 @@ ExtendedEditor::ExtendedEditor(QWidget* widget, int extra_right_padding,
 
   widget->connect(clear_button_, SIGNAL(clicked()), widget, SLOT(clear()));
   widget->connect(clear_button_, SIGNAL(clicked()), widget, SLOT(setFocus()));
+
   UpdateButtonGeometry();
 }
 
@@ -62,7 +63,6 @@ void ExtendedEditor::set_hint(const QString& hint) {
   hint_ = hint;
   this->clear();
   this->setPlaceholder(hint_);
-  //widget_->update();
 }
 
 void ExtendedEditor::set_clear_button(bool visible) {
@@ -167,7 +167,7 @@ TextEdit::TextEdit(QWidget* parent)
 void TextEdit::paintEvent(QPaintEvent* e) {
   QPlainTextEdit::paintEvent(e);
   Paint(viewport());
-  
+
   if (!widget_->hasFocus() && is_empty() && !hint_.isEmpty() && draw_hint_) {
     QPainter p(viewport());
 
@@ -184,7 +184,6 @@ void TextEdit::paintEvent(QPaintEvent* e) {
     p.setPen(col);
     p.setFont(font);
 
-    
     QRect r(5, kBorder, viewport()->width() - 10, viewport()->height() - kBorder * 2);
     p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
                m.elidedText(hint_, Qt::ElideRight, r.width()));
@@ -200,23 +199,22 @@ const char* SpinBox::abbrev_hint = "++";
 
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, true) {
-    connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
+  connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
 }
 
 void SpinBox::set_hint(const QString& hint) {
   if (hint.isEmpty()) {
     hint_ = "";
-  }
-  else {
+  } else {
     lineEdit()->clear();
     hint_ = abbrev_hint;
     lineEdit()->setPlaceholderText(abbrev_hint);
-  }  
+  }
 }
 
 void SpinBox::paintEvent(QPaintEvent* e) {
- QSpinBox::paintEvent(e);
- Paint(this);
+  QSpinBox::paintEvent(e);
+  Paint(this);
 }
 
 void SpinBox::resizeEvent(QResizeEvent* e) {
@@ -225,11 +223,11 @@ void SpinBox::resizeEvent(QResizeEvent* e) {
 }
 
 void SpinBox::focusOutEvent(QFocusEvent* event) {
- QSpinBox::focusOutEvent(event);
- if (!hint_.isEmpty()) {
-  lineEdit()->clear();
-  lineEdit()->setPlaceholderText(hint_);
- }
+  QSpinBox::focusOutEvent(event);
+  if (!hint_.isEmpty()) {
+    lineEdit()->clear();
+    lineEdit()->setPlaceholderText(hint_);
+  }
 }
 
 QString SpinBox::textFromValue(int val) const {

@@ -109,7 +109,7 @@ class LineEdit : public QLineEdit, public ExtendedEditor {
   // ExtendedEditor
   void set_focus() { QLineEdit::setFocus(); }
   QString text() const { return QLineEdit::text(); }
-  void set_text(const QString& text) {QLineEdit::setText(text); }
+  void set_text(const QString& text) { QLineEdit::setText(text); }
   void set_enabled(bool enabled) { QLineEdit::setEnabled(enabled); }
   void setPlaceholder(const QString& text) { setPlaceholderText(text); };
 
@@ -167,7 +167,7 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
 
   // QSpinBox
   QString textFromValue(int val) const;
-  
+
   // ExtendedEditor
   void set_hint(const QString& hint);
   bool is_empty() const { return text().isEmpty() || text() == "0"; }
@@ -184,7 +184,7 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
 
 signals:
   void Reset();
-  
+
  private:
   static const char* abbrev_hint;
 };
