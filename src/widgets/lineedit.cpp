@@ -193,8 +193,10 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
   Resize();
 }
 
+const char* SpinBox::abbrev_hint = "--";
+
 SpinBox::SpinBox(QWidget* parent)
-    : QSpinBox(parent), ExtendedEditor(this, 14, false) {
+    : QSpinBox(parent), ExtendedEditor(this, 14, true) {
     connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
  
   QLineEdit* le = this->lineEdit();
@@ -202,9 +204,13 @@ SpinBox::SpinBox(QWidget* parent)
 }
 
 void SpinBox::set_hint(const QString& hint) {
-  hint_ = "..";
+  if (hint.isEmpty()) {
+    hint_ = "";
+  }
+  else {
+    hint_ = abbrev_hint;
+  }  
 }
-
 
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);

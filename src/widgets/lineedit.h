@@ -181,6 +181,7 @@ signals:
   
  private:
   bool eventFilter(QObject* watched, QEvent* event);
+  static const char* abbrev_hint;
 };
 
 #endif  // LINEEDIT_H
