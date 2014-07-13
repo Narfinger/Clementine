@@ -167,6 +167,28 @@ TextEdit::TextEdit(QWidget* parent)
 void TextEdit::paintEvent(QPaintEvent* e) {
   QPlainTextEdit::paintEvent(e);
   Paint(viewport());
+  
+  if (!widget_->hasFocus() && is_empty() && !hint_.isEmpty() && draw_hint_) {
+    QPainter p(viewport());
+
+    QFont font;
+    font.setBold(false);
+    font.setPointSizeF(font_point_size_);
+
+    QFontMetrics m(font);
+    const int kBorder = (viewport()->height() - m.height()) / 2;
+
+    //the color of PlaceHolderText is hardcoded in Qt to be text color at 128 alpha
+    QColor col = widget_->palette().text().color();
+    col.setAlpha(128);
+    p.setPen(col);
+    p.setFont(font);
+
+    
+    QRect r(5, kBorder, viewport()->width() - 10, viewport()->height() - kBorder * 2);
+    p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
+               m.elidedText(hint_, Qt::ElideRight, r.width()));
+  }
 }
 
 void TextEdit::resizeEvent(QResizeEvent* e) {
@@ -191,8 +213,6 @@ void SpinBox::set_hint(const QString& hint) {
     lineEdit()->setPlaceholderText(abbrev_hint);
   }  
 }
-
-//TODO textedit does not work yet
 
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);
