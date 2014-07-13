@@ -192,6 +192,8 @@ void SpinBox::set_hint(const QString& hint) {
   }  
 }
 
+//TODO textedit does not work yet
+
 void SpinBox::paintEvent(QPaintEvent* e) {
  QSpinBox::paintEvent(e);
  Paint(this);
@@ -203,6 +205,7 @@ void SpinBox::resizeEvent(QResizeEvent* e) {
 }
 
 void SpinBox::focusOutEvent(QFocusEvent* event) {
+ QSpinBox::focusOutEvent(event);
  if (!hint_.isEmpty()) {
   lineEdit()->clear();
   lineEdit()->setPlaceholderText(hint_);

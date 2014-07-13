@@ -187,7 +187,6 @@ signals:
   
  private:
   static const char* abbrev_hint;
-  bool disable_eventfilter_ = false;
 };
 
 #endif  // LINEEDIT_H
