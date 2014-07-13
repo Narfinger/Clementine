@@ -42,6 +42,7 @@ class LineEditInterface {
   virtual QString hint() const = 0;
   virtual void set_hint(const QString& hint) = 0;
   virtual void clear_hint() = 0;
+  virtual void setPlaceholder(const QString& text) = 0;
 
   virtual void set_enabled(bool enabled) = 0;
 
@@ -60,6 +61,7 @@ class ExtendedEditor : public LineEditInterface {
   QString hint() const { return hint_; }
   void set_hint(const QString& hint);
   void clear_hint() { set_hint(QString()); }
+  virtual void setPlaceholder(const QString& text) = 0;
 
   bool has_clear_button() const { return has_clear_button_; }
   void set_clear_button(bool visible);
@@ -107,8 +109,9 @@ class LineEdit : public QLineEdit, public ExtendedEditor {
   // ExtendedEditor
   void set_focus() { QLineEdit::setFocus(); }
   QString text() const { return QLineEdit::text(); }
-  void set_text(const QString& text) { QLineEdit::setText(text); }
+  void set_text(const QString& text) {QLineEdit::setText(text); }
   void set_enabled(bool enabled) { QLineEdit::setEnabled(enabled); }
+  void setPlaceholder(const QString& text) { setPlaceholderText(text); };
 
  protected:
   void paintEvent(QPaintEvent*);
@@ -141,6 +144,7 @@ class TextEdit : public QPlainTextEdit, public ExtendedEditor {
   QString text() const { return QPlainTextEdit::toPlainText(); }
   void set_text(const QString& text) { QPlainTextEdit::setPlainText(text); }
   void set_enabled(bool enabled) { QPlainTextEdit::setEnabled(enabled); }
+  void setPlaceholder(const QString& text) {}; // QT5> give us native placeholder text, at the moment we have do to this with paintevent
 
  protected:
   void paintEvent(QPaintEvent*);
@@ -171,17 +175,19 @@ class SpinBox : public QSpinBox, public ExtendedEditor {
   QString text() const { return QSpinBox::text(); }
   void set_text(const QString& text) { QSpinBox::setValue(text.toInt()); }
   void set_enabled(bool enabled) { QSpinBox::setEnabled(enabled); }
+  void setPlaceholder(const QString& text) { lineEdit()->setPlaceholderText(text); };
 
  protected:
   void paintEvent(QPaintEvent*);
   void resizeEvent(QResizeEvent*);
+  void focusOutEvent(QFocusEvent* event);
 
 signals:
   void Reset();
   
  private:
-  bool eventFilter(QObject* watched, QEvent* event);
   static const char* abbrev_hint;
+  bool disable_eventfilter_ = false;
 };
 
 #endif  // LINEEDIT_H

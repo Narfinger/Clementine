@@ -60,7 +60,9 @@ ExtendedEditor::ExtendedEditor(QWidget* widget, int extra_right_padding,
 
 void ExtendedEditor::set_hint(const QString& hint) {
   hint_ = hint;
-  widget_->update();
+  this->clear();
+  this->setPlaceholder(hint_);
+  //widget_->update();
 }
 
 void ExtendedEditor::set_clear_button(bool visible) {
@@ -104,32 +106,11 @@ void ExtendedEditor::Paint(QPaintDevice* device) {
   if (!widget_->hasFocus() && is_empty() && !hint_.isEmpty()) {
     clear_button_->hide();
 
-    if (draw_hint_) {
-      PaintHint(device);
+    if (!draw_hint_) {
+      clear_button_->setVisible(has_clear_button_);
     }
-  } else {
-    clear_button_->setVisible(has_clear_button_);
   }
 }
-
-void ExtendedEditor::PaintHint(QPaintDevice* device) {
-  QPainter p(device);
-
-  QFont font;
-  font.setBold(false);
-  font.setPointSizeF(font_point_size_);
-
-  QFontMetrics m(font);
-  const int kBorder = (device->height() - m.height()) / 2;
-
-  p.setPen(widget_->palette().color(QPalette::Disabled, QPalette::Text));
-  p.setFont(font);
-
-  QRect r(5, kBorder, device->width() - 10, device->height() - kBorder * 2);
-  p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter,
-             m.elidedText(hint_, Qt::ElideRight, r.width()));
-}
-
 
 void ExtendedEditor::Resize() {
   const QSize sz = clear_button_->sizeHint();
@@ -193,14 +174,11 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
   Resize();
 }
 
-const char* SpinBox::abbrev_hint = "--";
+const char* SpinBox::abbrev_hint = "++";
 
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, true) {
     connect(reset_button_, SIGNAL(clicked()), SIGNAL(Reset()));
- 
-  QLineEdit* le = this->lineEdit();
-  le->installEventFilter(this);
 }
 
 void SpinBox::set_hint(const QString& hint) {
@@ -208,7 +186,9 @@ void SpinBox::set_hint(const QString& hint) {
     hint_ = "";
   }
   else {
+    lineEdit()->clear();
     hint_ = abbrev_hint;
+    lineEdit()->setPlaceholderText(abbrev_hint);
   }  
 }
 
@@ -222,19 +202,14 @@ void SpinBox::resizeEvent(QResizeEvent* e) {
   Resize();
 }
 
+void SpinBox::focusOutEvent(QFocusEvent* event) {
+ if (!hint_.isEmpty()) {
+  lineEdit()->clear();
+  lineEdit()->setPlaceholderText(hint_);
+ }
+}
+
 QString SpinBox::textFromValue(int val) const {
   if (val <= 0 && !hint_.isEmpty()) return "-";
   return QSpinBox::textFromValue(val);
 }
-
-bool SpinBox::eventFilter(QObject* watched, QEvent* event) {
-  if (lineEdit() == watched && event->type() == QEvent::Paint) {
-    if (!draw_hint_) return false;
-    if (hint_.isEmpty()) return false;
-    QPainter p(lineEdit());
-    PaintHint(lineEdit());
-    return true;
-  }
-  return false;
-}
-
