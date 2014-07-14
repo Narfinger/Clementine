@@ -195,7 +195,7 @@ void TextEdit::resizeEvent(QResizeEvent* e) {
   Resize();
 }
 
-const char* SpinBox::abbrev_hint = "++";
+const char* SpinBox::abbrev_hint = "-";
 
 SpinBox::SpinBox(QWidget* parent)
     : QSpinBox(parent), ExtendedEditor(this, 14, true) {
@@ -206,9 +206,9 @@ void SpinBox::set_hint(const QString& hint) {
   if (hint.isEmpty()) {
     hint_ = "";
   } else {
-    lineEdit()->clear();
     hint_ = abbrev_hint;
-    lineEdit()->setPlaceholderText(abbrev_hint);
+    lineEdit()->clear();
+    setPlaceholder(abbrev_hint);
   }
 }
 
@@ -224,7 +224,7 @@ void SpinBox::resizeEvent(QResizeEvent* e) {
 
 void SpinBox::focusOutEvent(QFocusEvent* event) {
   QSpinBox::focusOutEvent(event);
-  if (!hint_.isEmpty()) {
+  if (!hint_.isEmpty() && value() <=0) {
     lineEdit()->clear();
     lineEdit()->setPlaceholderText(hint_);
   }
