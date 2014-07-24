@@ -72,8 +72,12 @@ TagReaderReply* TagReaderClient::SaveFile(const QString& filename,
 
   TagReaderReply* reply = worker_pool_->SendMessageWithReply(&message);
  
-  //this is honestly only in a qtconcurrent because i could not figure out how to do this with NewClosure
-  QtConcurrent::run(this, &TagReaderClient::SongSaveComplete, reply, filename, metadata);
+  
+  //segfault
+  NewClosure(reply, SIGNAL(Finished(bool)), this,
+                 SLOT(SongSaveComplete(TagReaderReply*, QString&, Song&)),
+                 reply, filename, metadata);
+  //connect(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveWrapTest())); //This works
   return reply;
 }
 
@@ -231,6 +235,15 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
 
   return ret;
 }
+
+void TagReaderClient::SongSaveWrapTest()
+{
+  TagReaderClient::ReplyType* reply = 0;
+  QString filename = "";
+  Song s;
+  SongSaveComplete(reply, filename, s);
+}
+
 
 void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song) {
   LibraryBackend* be = app_->library_backend();

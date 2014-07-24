@@ -67,6 +67,7 @@ class TagReaderClient : public QObject {
 
  public slots:
   void SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song);
+  void SongSaveWrapTest();
   void UpdateSongsStatistics(const SongList& songs);
   void UpdateSongsRating(const SongList& songs);
 
