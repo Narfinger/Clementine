@@ -25,6 +25,8 @@
 #include <QObject>
 #include <QSharedPointer>
 
+#include <QDebug>
+
 namespace _detail {
 
 class ObjectHelper;
@@ -95,12 +97,14 @@ class Closure : public ClosureBase {
     slot_ = meta_receiver->method(index);
     QObject::connect(receiver_, SIGNAL(destroyed()), helper_,
                      SLOT(deleteLater()));
+    qDebug() << "created closure";
   }
 
   virtual void Invoke() { function_(); }
 
  private:
   void Call(const Args&... args) {
+    qDebug() << "call this";
     QList<QGenericArgument> arg_list;
     Unpack(&arg_list, args...);
 
@@ -151,6 +155,7 @@ template <typename... Args>
 _detail::ClosureBase* NewClosure(QObject* sender, const char* signal,
                                  QObject* receiver, const char* slot,
                                  const Args&... args) {
+  qDebug() << "newclosure2";
   return new _detail::Closure<Args...>(sender, signal, receiver, slot, args...);
 }
 

@@ -641,7 +641,8 @@ bool TagReader::SaveFile(const QString& filename,
     SetVorbisComments(tag, song);
   }
 
-  bool ret = fileref->save();
+  //bool ret = fileref->save();
+  bool ret = true;
 #ifdef Q_OS_LINUX
   if (ret) {
     // Linux: inotify doesn't seem to notice the change to the file unless we

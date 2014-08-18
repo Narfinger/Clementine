@@ -44,6 +44,7 @@ ObjectHelper::ObjectHelper(QObject* sender, const char* signal,
 }
 
 void ObjectHelper::Invoked() {
+  qDebug() << "objhelper invoked";
   closure_->Invoke();
   deleteLater();
 }

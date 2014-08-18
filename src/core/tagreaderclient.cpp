@@ -68,9 +68,11 @@ TagReaderReply* TagReaderClient::SaveFile(const QString& filename,
   metadata.ToProtobuf(req->mutable_metadata());
 
   TagReaderReply* reply = worker_pool_->SendMessageWithReply(&message);
-  
-  SongSaveComplete(reply, filename, metadata); //this might be not instant
-  
+
+  NewClosure(reply, SIGNAL(Finished(bool)), this,
+	     SLOT(SongSaveComplete(TagReaderClient::ReplyType*, QString, Song)),
+	     reply, filename, metadata);
+  connect(reply, SIGNAL(Finished(bool)), this, SLOT(tmp()));
   return reply;
 }
 
@@ -230,7 +232,8 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
   return ret;
 }
 
-void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, const QString& filename, const Song& song) {
+void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, QString filename, Song song) {
+  qDebug() << "XCCCCCCC";
   LibraryBackend* be = app_->library_backend();
   SongList slist;
   slist << song;
