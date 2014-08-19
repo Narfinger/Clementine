@@ -66,13 +66,22 @@ TagReaderReply* TagReaderClient::SaveFile(const QString& filename,
 
   req->set_filename(DataCommaSizeFromQString(filename));
   metadata.ToProtobuf(req->mutable_metadata());
-
-  TagReaderReply* reply = worker_pool_->SendMessageWithReply(&message);
-
-  NewClosure(reply, SIGNAL(Finished(bool)), this,
+  qDebug() << "SaveFileCalled";
+  //TagReaderReply* reply = worker_pool_->SendMessageWithReply(&message);
+  TagReaderClient::ReplyType* reply = worker_pool_->SendMessageWithReply(&message);
+//perhaps finished is never emitted?
+  //NewClosure(reply, SIGNAL(Finished(bool)), this,
+  //             SLOT(SongSaveComplete()));
+  QString tmp("ttt");
+  NewClosure(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveComplete()));
+  //connect(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveComplete(QString)), tmp);
+  /*NewClosure(reply, SIGNAL(Finished(bool)), this,
 	     SLOT(SongSaveComplete(TagReaderClient::ReplyType*, QString, Song)),
-	     reply, filename, metadata);
+	     reply, filename, metadata);*/
   connect(reply, SIGNAL(Finished(bool)), this, SLOT(tmp()));
+  
+  reply->WaitForFinished();
+  qDebug() << "leaving savefile";
   return reply;
 }
 
@@ -162,14 +171,14 @@ void TagReaderClient::ReadFileBlocking(const QString& filename, Song* song) {
 bool TagReaderClient::SaveFileBlocking(const QString& filename,
                                        const Song& metadata) {
   Q_ASSERT(QThread::currentThread() != thread());
-
+  qDebug() << "SaveFileBlocking called";
   bool ret = false;
 
-  TagReaderReply* reply = SaveFile(filename, metadata);
-  if (reply->WaitForFinished()) {
+  /*TagReaderReply* reply = */SaveFile(filename, metadata);
+  /*if (reply->WaitForFinished()) {
     ret = reply->message().save_file_response().success();
-  }
-  reply->deleteLater();
+  }*/
+  //reply->deleteLater();
 
   return ret;
 }
@@ -232,12 +241,12 @@ QImage TagReaderClient::LoadEmbeddedArtBlocking(const QString& filename) {
   return ret;
 }
 
-void TagReaderClient::SongSaveComplete(TagReaderClient::ReplyType* reply, QString filename, Song song) {
-  qDebug() << "XCCCCCCC";
-  LibraryBackend* be = app_->library_backend();
+void TagReaderClient::SongSaveComplete(/*QString filename, Song song*/) {
+  qDebug() << "XCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCc";
+ /* LibraryBackend* be = app_->library_backend();
   SongList slist;
   slist << song;
   if (song.directory_id() !=-1) { //if we are in a collection directory
     be->AddOrUpdateSongs(slist);
-  }
+  }*/
 }

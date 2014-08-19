@@ -39,8 +39,10 @@ ObjectHelper* ClosureBase::helper() const { return helper_; }
 ObjectHelper::ObjectHelper(QObject* sender, const char* signal,
                            ClosureBase* closure)
     : closure_(closure) {
-  connect(sender, signal, SLOT(Invoked()));
-  connect(sender, SIGNAL(destroyed()), SLOT(deleteLater()));
+      qDebug() << "connected";
+  bool res = connect(sender, signal, SLOT(Invoked()));
+  qDebug() << "sender info:" << res << " " << signal << sender->signalsBlocked() << sender->metaObject()->checkConnectArgs(signal, SLOT(Invoked()));
+  //connect(sender, SIGNAL(destroyed()), SLOT(deleteLater()));
 }
 
 void ObjectHelper::Invoked() {

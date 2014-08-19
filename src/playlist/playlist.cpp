@@ -407,6 +407,7 @@ bool Playlist::setData(const QModelIndex& index, const QVariant& value,
 
 void Playlist::SongSaveComplete(TagReaderReply* reply,
                                 const QPersistentModelIndex& index) {
+  qDebug() << "song save complete thingy";
   if (reply->is_successful() && index.isValid()) {
     QFuture<void> future = item_at(index.row())->BackgroundReload();
     ModelFutureWatcher<void>* watcher =

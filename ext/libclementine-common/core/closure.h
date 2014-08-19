@@ -55,13 +55,14 @@ class ObjectHelper : public QObject {
   Q_OBJECT
  public:
   ObjectHelper(QObject* parent, const char* signal, ClosureBase* closure);
+  ~ObjectHelper() { qDebug() << "Objhelper destroyed"; };
 
  private slots:
   void Invoked();
 
  private:
   std::unique_ptr<ClosureBase> closure_;
-  Q_DISABLE_COPY(ObjectHelper);
+  //Q_DISABLE_COPY(ObjectHelper);
 };
 
 // Helpers for unpacking a variadic template list.
@@ -95,12 +96,17 @@ class Closure : public ClosureBase {
     const int index = meta_receiver->indexOfSlot(normalised_slot.constData());
     Q_ASSERT(index != -1);
     slot_ = meta_receiver->method(index);
-    QObject::connect(receiver_, SIGNAL(destroyed()), helper_,
-                     SLOT(deleteLater()));
+    //QObject::connect(receiver_, SIGNAL(destroyed()), helper_,
+    //                 SLOT(deleteLater()));
     qDebug() << "created closure";
+    
+    const QMetaObject* metaObject = sender->metaObject();
+    for(int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i)
+     qDebug() << "smethods" << QString::fromLatin1(metaObject->method(i).signature());
+    
   }
 
-  virtual void Invoke() { function_(); }
+  virtual void Invoke() { qDebug() << "invoked closure"; function_(); }
 
  private:
   void Call(const Args&... args) {
@@ -155,7 +161,7 @@ template <typename... Args>
 _detail::ClosureBase* NewClosure(QObject* sender, const char* signal,
                                  QObject* receiver, const char* slot,
                                  const Args&... args) {
-  qDebug() << "newclosure2";
+  qDebug() << "newclosure2 signal " << signal;
   return new _detail::Closure<Args...>(sender, signal, receiver, slot, args...);
 }
 

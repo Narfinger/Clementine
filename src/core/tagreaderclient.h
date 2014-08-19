@@ -71,7 +71,7 @@ class TagReaderClient : public QObject {
 
  private slots:
   void WorkerFailedToStart();
-  void SongSaveComplete(TagReaderClient::ReplyType* reply, QString filename, Song song);
+  void SongSaveComplete(/*QString filename, Song song*/);
   void tmp() { qDebug() << "tmp called this was finished"; };
 
  private:
