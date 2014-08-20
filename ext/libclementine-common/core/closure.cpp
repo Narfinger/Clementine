@@ -41,8 +41,12 @@ ObjectHelper::ObjectHelper(QObject* sender, const char* signal,
     : closure_(closure) {
       qDebug() << "connected";
   bool res = connect(sender, signal, SLOT(Invoked()));
+  //this signal is not send or the connection breaks or something!
+  //try to find out if this object vanishes for some reason
+  
+  
   qDebug() << "sender info:" << res << " " << signal << sender->signalsBlocked() << sender->metaObject()->checkConnectArgs(signal, SLOT(Invoked()));
-  //connect(sender, SIGNAL(destroyed()), SLOT(deleteLater()));
+  connect(sender, SIGNAL(destroyed()), SLOT(deleteLater()));
 }
 
 void ObjectHelper::Invoked() {

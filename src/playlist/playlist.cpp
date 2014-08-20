@@ -401,6 +401,7 @@ bool Playlist::setData(const QModelIndex& index, const QVariant& value,
     NewClosure(reply, SIGNAL(Finished(bool)), this,
                SLOT(SongSaveComplete(TagReaderReply*, QPersistentModelIndex)),
                reply, QPersistentModelIndex(index));
+    qDebug() << reply->WaitForFinished();
   }
   return true;
 }

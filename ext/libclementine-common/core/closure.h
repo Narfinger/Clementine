@@ -96,8 +96,8 @@ class Closure : public ClosureBase {
     const int index = meta_receiver->indexOfSlot(normalised_slot.constData());
     Q_ASSERT(index != -1);
     slot_ = meta_receiver->method(index);
-    //QObject::connect(receiver_, SIGNAL(destroyed()), helper_,
-    //                 SLOT(deleteLater()));
+    QObject::connect(receiver_, SIGNAL(destroyed()), helper_,
+                     SLOT(deleteLater()));
     qDebug() << "created closure";
     
     const QMetaObject* metaObject = sender->metaObject();

@@ -20,6 +20,10 @@
 #include "playlist/playlistmanager.h"
 #include "tagreaderclient.h"
 
+#include <unistd.h>
+#include <chrono>
+#include <thread>
+
 #include <QCoreApplication>
 #include <QFile>
 #include <QMutexLocker>
@@ -72,17 +76,18 @@ TagReaderReply* TagReaderClient::SaveFile(const QString& filename,
 //perhaps finished is never emitted?
   //NewClosure(reply, SIGNAL(Finished(bool)), this,
   //             SLOT(SongSaveComplete()));
-  QString tmp("ttt");
+  //QString tmp("ttt");
   NewClosure(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveComplete()));
   //connect(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveComplete(QString)), tmp);
   /*NewClosure(reply, SIGNAL(Finished(bool)), this,
 	     SLOT(SongSaveComplete(TagReaderClient::ReplyType*, QString, Song)),
 	     reply, filename, metadata);*/
   connect(reply, SIGNAL(Finished(bool)), this, SLOT(tmp()));
-  
-  reply->WaitForFinished();
+  //reply->WaitForFinished();
   qDebug() << "leaving savefile";
+
   return reply;
+  //return reply;
 }
 
 TagReaderReply* TagReaderClient::UpdateSongStatistics(const Song& metadata) {
@@ -173,14 +178,31 @@ bool TagReaderClient::SaveFileBlocking(const QString& filename,
   Q_ASSERT(QThread::currentThread() != thread());
   qDebug() << "SaveFileBlocking called";
   bool ret = false;
-
-  /*TagReaderReply* reply = */SaveFile(filename, metadata);
+  Q_UNUSED(ret);
+  TagReaderReply* reply = SaveFile(filename, metadata);
+  //qDebug() << reply->is_finished();
+  NewClosure(reply, SIGNAL(Finished(bool)), this, SLOT(SongSaveComplete()));
   /*if (reply->WaitForFinished()) {
     ret = reply->message().save_file_response().success();
+    qDebug() << "waitforfinished";
   }*/
   //reply->deleteLater();
-
-  return ret;
+  //bool b = reply->WaitForFinished();
+  //qDebug() << "replyresponse" << reply->message().save_file_response().success();
+  //qDebug() << "reply response..........................";
+  //qDebug() << "finished:" << reply->WaitForFinished();
+  qDebug() << "sleep start";
+  std::chrono::seconds timespan(5);
+  std::this_thread::sleep_for(timespan);
+  qDebug() << "sleep stop";
+  
+  
+  
+  //newclosure does something very very wrong and i don't know what
+  //differences:- closure does capture reply
+  // 		- reply not used for anything else
+  
+  return true;
 }
 
 bool TagReaderClient::UpdateSongStatisticsBlocking(const Song& metadata) {
